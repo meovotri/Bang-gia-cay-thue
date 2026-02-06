@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banner Dịch Vụ Cày Thuê AFSE - Pro Interactive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700;900&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #020617;
+            color: #f8fafc;
+            overflow-x: hidden;
+            margin: 0;
+        }
+
+        /* Canvas nền cho sấm sét */
+        #lightningCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.6;
+        }
+
+        /* Viền khung Premium */
+        .gaming-card {
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            z-index: 10;
+        }
+
+        .gaming-card::before {
+            content: "";
+            position: absolute;
+            inset: -1px;
+            z-index: -1;
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.3) 0%, rgba(30, 41, 59, 0) 50%, rgba(234, 88, 12, 0.3) 100%);
+            border-radius: inherit;
+        }
+
+        /* Hiệu ứng trượt xuất hiện cho toàn bộ trang */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-reveal {
+            animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            opacity: 0;
+        }
+
+        .delay-1 {
+            animation-delay: 0.1s;
+        }
+
+        .delay-2 {
+            animation-delay: 0.2s;
+        }
+
+        .delay-3 {
+            animation-delay: 0.3s;
+        }
+
+        .delay-4 {
+            animation-delay: 0.4s;
+        }
+
+        .delay-5 {
+            animation-delay: 0.5s;
+        }
+
+        /* Accordion Tầng 1 */
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.6s ease-in-out;
+        }
+
+        .accordion-item.active>.accordion-content {
+            max-height: none;
+            overflow: visible;
+        }
+
+        .accordion-item.active>button .chevron-main {
+            transform: rotate(180deg);
+        }
+
+        /* Accordion Tầng 2 */
+        .sub-accordion-wrapper {
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .service-item.sub-active .sub-accordion-wrapper {
+            max-height: 2000px;
+            opacity: 1;
+            margin-top: 8px;
+            padding-bottom: 8px;
+        }
+
+        .service-item.sub-active .chevron-sub {
+            transform: rotate(180deg);
+            color: #f97316;
+        }
+
+        /* Tooltip Hint Text */
+        .hover-hint {
+            position: absolute;
+            right: 45px;
+            background: rgba(249, 115, 22, 0.9);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            opacity: 0;
+            transform: translateX(10px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .service-row:hover .hover-hint {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Kiểu dáng hàng dịch vụ */
+        .service-row {
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .service-row:hover {
+            border-color: rgba(249, 115, 22, 0.6);
+            background: rgba(249, 115, 22, 0.12);
+            transform: scale(1.01) translateX(5px);
+        }
+
+        .price-tag {
+            color: #fbbf24;
+            font-weight: 800;
+        }
+
+        /* CHỈNH SỬA KÍCH THƯỚC ẢNH */
+        .desc-image {
+            border: 1px solid rgba(249, 115, 22, 0.3);
+            border-radius: 8px;
+            height: 120px;
+            width: auto;
+            max-width: 100%;
+            object-fit: contain;
+            margin: 5px;
+            display: inline-block;
+            background: #1e293b;
+            vertical-align: middle;
+            transition: transform 0.3s ease;
+        }
+
+        .desc-image:hover {
+            transform: scale(1.05);
+        }
+
+        /* Hiệu ứng ảnh Hero Fox */
+        .hero-fox-glow {
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+            animation: fox-breathe 4s infinite alternate;
+        }
+
+        @keyframes fox-breathe {
+            0% {
+                box-shadow: 0 0 15px rgba(249, 115, 22, 0.2);
+                border-color: rgba(249, 115, 22, 0.4);
+            }
+
+            100% {
+                box-shadow: 0 0 30px rgba(249, 115, 22, 0.6);
+                border-color: rgba(249, 115, 22, 0.9);
+            }
+        }
+
+        /* Social Glow Effect */
+        .social-btn-glow {
+            transition: all 0.3s ease;
+        }
+
+        .fb-glow {
+            animation: pulse-blue 2.5s infinite;
+        }
+
+        .discord-glow {
+            animation: pulse-indigo 2.5s infinite;
+        }
+
+        @keyframes pulse-blue {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.6);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+            }
+        }
+
+        @keyframes pulse-indigo {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(88, 101, 242, 0.6);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(88, 101, 242, 0);
+            }
+        }
+    </style>
+</head>
+
+<body class="p-2 sm:p-4 md:p-10 flex justify-center items-start min-h-screen bg-[#020617]">
+
+    <!-- Canvas cho hiệu ứng sấm sét -->
+    <canvas id="lightningCanvas"></canvas>
+
+    <div
+        class="max-w-5xl w-full gaming-card rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden relative animate-reveal">
+
+        <!-- Watermark -->
+        <div class="absolute top-0 right-0 opacity-[0.02] pointer-events-none -mr-20 -mt-20">
+            <svg width="450" height="450" viewBox="0 0 24 24" fill="#f97316">
+                <path d="M12,2L4.5,20.29L5.21,21L12,18L18.79,21L19.5,20.29L12,2Z" />
+            </svg>
+        </div>
+
+        <!-- Header -->
+        <div
+            class="relative bg-slate-900/30 flex flex-col items-center justify-center text-center p-6 pt-10 border-b border-white/5">
+
+            <!-- Đã xóa logo cáo nhỏ ở đây theo yêu cầu -->
+
+            <h1
+                class="text-2xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight text-white mb-2 animate-reveal delay-2">
+                BẢNG GIÁ CÀY THUÊ <span class="text-orange-500">[AFSE]</span>
+            </h1>
+            <p
+                class="text-[10px] sm:text-xs md:text-sm font-bold text-slate-400 tracking-[0.3em] uppercase animate-reveal delay-3 mb-6">
+                UY TÍN • NHANH CHÓNG • GIÁ RẺ
+            </p>
+
+            <!-- KHUNG ẢNH COOL FOX MỚI -->
+            <!-- Bạn có thể thay đổi link ảnh trong src="" bên dưới -->
+            <div class="w-full max-w-[500px] relative animate-reveal delay-4 group cursor-pointer">
+                <!-- Hiệu ứng nền mờ -->
+                <div
+                    class="absolute -inset-1 bg-gradient-to-r from-orange-600 to-red-600 rounded-xl blur opacity-25 group-hover:opacity-60 transition duration-500">
+                </div>
+
+                <!-- ẢNH CHÍNH (THAY LINK ẢNH CỦA BẠN VÀO ĐÂY) -->
+                <!-- Tôi dùng ảnh Kurama (Cửu Vĩ) ngầu lòi làm mẫu -->
+                <img src="Image/meoavt.png" alt="Cool Fox Character"
+                    class="relative w-full h-[250px] md:h-[300px] object-cover object-top rounded-xl border border-orange-500/50 shadow-2xl hero-fox-glow transform group-hover:scale-[1.01] transition-all duration-500">
+
+                <!-- Badge trang trí -->
+                <div
+                    class="absolute bottom-4 right-4 bg-orange-600/90 text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg backdrop-blur-sm">
+                    AFSE Treo SImulator
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Main Content -->
+        <div class="p-4 sm:p-6 md:p-10 space-y-6 md:space-y-10 animate-reveal delay-5">
+
+            <!-- 1. DỊCH VỤ UPDATE (Đã thay icon cáo thành icon tên lửa) -->
+            <div class="accordion-item active">
+                <button onclick="toggleAccordion(this)"
+                    class="w-full flex items-center justify-between p-4 bg-slate-800/40 rounded-xl md:rounded-2xl border border-white/5">
+                    <div class="flex items-center gap-3">
+                        <!-- Đã thay icon con cáo ở đây -->
+                        <span class="text-xl md:text-2xl">🚀</span>
+                        <h2 class="text-xs md:text-sm font-black uppercase text-orange-500/90">Dịch Vụ Update New
+                            (Update 4.0)</h2>
+                    </div>
+                    <svg class="chevron-main w-5 h-5 text-slate-500 transition-transform duration-300" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div class="accordion-content">
+                    <div class="p-2 md:p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="service-item w-full">
+                            <div onclick="toggleSubAccordion(this)"
+                                class="service-row p-4 rounded-xl flex justify-between items-center group">
+                                <div class="flex items-center gap-2"><svg
+                                        class="chevron-sub w-3 h-3 transition-transform" fill="currentColor"
+                                        viewBox="0 0 20 20">
+                                        <path
+                                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z">
+                                        </path>
+                                    </svg><span class="text-xs md:text-sm font-bold">Full Battlepass</span></div>
+                                <div class="flex items-center gap-3"><span class="hover-hint">Xem chi tiết</span><span
+                                        class="price-tag">88k</span></div>
+                            </div>
+                            <div class="sub-accordion-wrapper px-4">
+                                <div class="text-center md:text-left">
+                                    <img src="Image/fightingpass.png"
+                                        onerror="this.onerror=null; this.src='Image/fightingpass.png';"
+                                        class="desc-image" alt="Fightingpass">
+                                    <img src="Image/Rocklee.webp"
+                                        onerror="this.onerror=null; this.src='Image/fightingpass.png';"
+                                        class="desc-image" alt="Rocklee">
+                                    <img src="Image/Kakashi.webp"
+                                        onerror="this.onerror=null; this.src='Image/fightingpass.png';"
+                                        class="desc-image" alt="Kakashi">
+                                    <img src="Image/Narutolucdao.webp"
+                                        onerror="this.onerror=null; this.src='Image/fightingpass.png';"
+                                        class="desc-image" alt="Naruto">
+                                    <img src="Image/Shank.webp"
+                                        onerror="this.onerror=null; this.src='Image/fightingpass.png';"
+                                        class="desc-image" alt="Shank">
+                                </div>
+                                <p class="text-xs text-slate-400 italic mt-2">Hoàn thành trong 25 ngày. Nhận full quà
+                                    Battlepass. Cày bằng dayli quest , lẻ 3k5/ 1 ngày ,nếu đã cày sẵn thì sẽ giảm giá
+                                    tiền tùy theo level hiện tại , Gói siêu ngon với 4 champion free mạnh nhất game ,chỉ
+                                    nhận tối đa 12 slotgias 88k,sau 12 slot nhận với giá 125k </p>
+                            </div>
+                        </div>
+                        <div class="service-item w-full">
+                            <div onclick="toggleSubAccordion(this)"
+                                class="service-row p-4 rounded-xl flex justify-between items-center group">
+                                <div class="flex items-center gap-2"><svg
+                                        class="chevron-sub w-3 h-3 transition-transform" fill="currentColor"
+                                        viewBox="0 0 20 20">
+                                        <path
+                                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z">
+                                        </path>
+                                    </svg><span class="text-xs md:text-sm font-bold">Full Skill Boss Kurama</span></div>
+                                <div class="flex items-center gap-3"><span class="hover-hint">Xem chi tiết</span><span
+                                        class="price-tag">40k</span></div>
+                            </div>
+                            <div class="sub-accordion-wrapper px-4">
+                                <img src="Image/skillkurama.png"
+                                    onerror="this.onerror=null; this.src='Image/skillkurama.png';" class="desc-image"
+                                    alt="Skill Kurama">
+                                <p class="text-xs text-slate-400 italic mt-2">Cày full kỹ năng từ Boss Kurama, kỹ năng
+                                    rất mạnh chuyên PVP/Boss. Nếu có skill gì rồi sẽ trừ tiền ra.</p>
+                            </div>
+                        </div>
+                        <div class="service-item w-full">
+                            <div onclick="toggleSubAccordion(this)"
+                                class="service-row p-4 rounded-xl flex justify-between items-center group">
+                                <div class="flex items-center gap-2"><svg
+                                        class="chevron-sub w-3 h-3 transition-transform" fill="currentColor"
+                                        viewBox="0 0 20 20">
+                                        <path
+                                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z">
+                                        </path>
+                                    </svg><span class="text-xs md:text-sm font-bold">Minato Quest</span></div>
+                                <div class="flex items-center gap-3"><span class="hover-hint">Xem chi tiết</span><span
+                                        class="price-tag">70k</span></div>
+                            </div>
+                            <div class="sub-accordion-wrapper px-4">
+                                <img src="Image/Minato quest.png"
+                                    onerror="this.onerror=null; this.src='Image/Minato quest.png';" class="desc-image"
+                                    alt="Minato Quest">
+                                <p class="text-xs text-slate-400 italic mt-2">Hoàn thành NPC Minato nhận 5 slot
+                                    champion rương free ,Yêu cầu SX power, có token , quest cho ae end game content cày
+                                    ,ko phù hợp cho newbie vì quà chủ yếu là boost thời gian treo máy ! Ai mún treo máy
+                                    hiệu quả có thể cày quets này </p>
+                            </div>
+                        </div>
+                        <div class="service-item w-full">
+                            <div onclick="toggleSubAccordion(this)"
+                                class="service-row p-4 rounded-xl flex justify-between items-center group">
+                                <div class="flex items-center gap-2"><svg
+                                        class="chevron-sub w-3 h-3 transition-transform" fill="currentColor"
+                                        viewBox="0 0 20 20">
+                                        <path
+                                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z">
+                                        </path>
+                                    </svg><span class="text-xs md:text-sm font-bold">Minato Champion</span></div>
+                                <div class="flex items-center gap-3"><span class="hover-hint">Xem chi tiết</span><span
+                                        class="price-tag">30k</span></div>
+                            </div>
+                            <div class="sub-accordion-wrapper px-4">
+                                <img src="Image/minato champiom.png"
+                                    onerror="this.onerror=null; this.src='Image/minato champiom.png';"
+                                    class="desc-image" alt="Minato Champion">
+                                <p class="text-xs text-slate-400 italic mt-2">Minato champion cực mạnh để gain charka
+                                    (175%) top 2 game và đánh boss kurama rất
+                                    ngon. Yêu cầu 250QN power,dành cho ae nào muốn sưu tầm </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. POWER UP (0 ➡️ SP) -->
+            <div class="accordion-item active">
+                <button onclick="toggleAccordion(this)"
+                    class="w-full flex items-center justify-between p-4 bg-slate-800/40 rounded-xl md:rounded-2xl border border-white/5">
+                    <div class="flex items-center gap-3"><span class="text-lg md:text-2xl">⚡</span>
+                        <h2 class="text-xs md:text-sm font-black uppercase text-yellow-500/80">Power Up (0 ➡️ SP)</h2>
+                    </div>
+                    <svg class="chevron-main w-5 h-5 text-slate-500 transition-transform duration-300" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div class="accordion-content">
+                    <div class="p-2 md:p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="service-item w-full">
+                            <div onclick="toggleSubAccordion(this)"
+                                class="service-row p-4 rounded-xl flex justify-between items-center group">
+                                <div class="flex items-center gap-2"><svg
+                                        class="chevron-sub w-3 h-3 transition-transform" fill="currentColor"
+                                        viewBox="0 0 20 20">
+                                        <path
+                                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z">
+                                        </path>
+                                    </svg><span class="text-xs md:text-sm font-bold">(0 ➡️ QN)</span></div>
+                                <div class="flex items-center gap-3"><span class="hover-hint">Chi tiết</span><span
+                                        class="price-tag">80k</span></div>
+                            </div>
+                            <div class="sub-accordion-wrapper px-4 text-xs text-orange-400 font-bold uppercase">Tặng
+                                Full Token A & QN Power đi kèm với champion Kirito gain 125% sword cực ngon . Tiền đề
+                                đánh rimuru ,pain ,minato ,QN power .Có fix tùy theo power của khách</div>
+                        </div>
+                        <div class="service-item w-full">
+                            <div onclick="toggleSubAccordion(this)"
+                                class="service-row p-4 rounded-xl flex justify-between items-center group">
+                                <div class="flex items-center gap-2"><svg
+                                        class="chevron-sub w-3 h-3 transition-transform" fill="currentColor"
+                                        viewBox="0 0 20 20">
+                                        <path
+                                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z">
+                                        </path>
+                                    </svg><span class="text-xs md:text-sm font-bold">(QN ➡️ SX)</span></div>
+                                <div class="flex items-center gap-3"><span class="hover-hint">Chi tiết</span><span
+                                        class="price-tag">40k </span></div>
+                            </div>
+                            <div class="sub-accordion-wrapper px-4 text-xs text-orange-400 font-bold uppercase">Yêu cầu
+                                Full Token A đổ lên. Giá cao hơn nếu ko có gamepass , token : 70k </div>
+                        </div>
+                        <div class="service-item w-full">
+                            <div onclick="toggleSubAccordion(this)"
+                                class="service-row p-4 rounded-xl flex justify-between items-center group">
+                                <div class="flex items-center gap-2"><svg
+                                        class="chevron-sub w-3 h-3 transition-transform" fill="currentColor"
+                                        viewBox="0 0 20 20">
+                                        <path
+                                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z">
+                                        </path>
+                                    </svg><span class="text-xs md:text-sm font-bold">(SX ➡️ SP)</span></div>
+                                <div class="flex items-center gap-3"><span class="hover-hint">Chi tiết</span><span
+                                        class="price-tag">50k</span></div>
+                            </div>
+                            <div class="sub-accordion-wrapper px-4 text-xs text-orange-400 font-bold uppercase">Power
+                                cao nhất để chinh phục game hiện tại ,dành cho ae hướng đến cày ACE ,ko gamepass 100k
+                                yêu cầu max token A </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. SĂN CHAMPION -->
+            <div class="accordion-item active">
+                <button onclick="toggleAccordion(this)"
+                    class="w-full flex items-center justify-between p-4 bg-slate-800/40 rounded-xl md:rounded-2xl border border-white/5">
+                    <div class="flex items-center gap-3"><span class="text-lg md:text-2xl">⚔️</span>
+                        <h2 class="text-xs md:text-sm font-black uppercase text-red-500/80">Săn Champion (Bao ra)</h2>
+                    </div>
+                    <svg class="chevron-main w-5 h-5 text-slate-500 transition-transform duration-300" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div class="accordion-content">
+                    <div class="p-2 md:p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="service-item w-full">
+                            <div onclick="toggleSubAccordion(this)"
+                                class="service-row p-4 rounded-xl flex justify-between items-center group">
+                                <div class="flex items-center gap-2"><svg
+                                        class="chevron-sub w-3 h-3 transition-transform" fill="currentColor"
+                                        viewBox="0 0 20 20">
+                                        <path
+                                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z">
+                                        </path>
+                                    </svg><span class="text-xs md:text-sm font-bold text-orange-400">Rimuru (Yêu cầu:
+                                        2QN)</span></div>
+                                <div class="flex items-center gap-3"><span class="hover-hint">Chi tiết</span><span
+                                        class="price-tag">30k</span></div>
+                            </div>
+                            <div class="sub-accordion-wrapper px-4">
+                                <img src="Image/Rimuru.png"
+                                    onerror="this.onerror=null; this.src='Image/skillkurama.png';" class="desc-image"
+                                    alt="Rimuru">
+                                <p class="text-xs text-slate-400 italic mt-2">Rimuru là 1 champion gain charka top 1 của
+                                    game với 200% là sự lựa chọn hàng đầu của tất cả pro kì cựu ,đánh boss ngon tăng 50%
+                                    dame </p>
+                            </div>
+                        </div>
+                        <div class="service-item w-full">
+                            <div onclick="toggleSubAccordion(this)"
+                                class="service-row p-4 rounded-xl flex justify-between items-center group">
+                                <div class="flex items-center gap-2"><svg
+                                        class="chevron-sub w-3 h-3 transition-transform" fill="currentColor"
+                                        viewBox="0 0 20 20">
+                                        <path
+                                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z">
+                                        </path>
+                                    </svg><span class="text-xs md:text-sm font-bold">Kirito (Yêu cầu: QD)</span></div>
+                                <div class="flex items-center gap-3"><span class="hover-hint">Chi tiết</span><span
+                                        class="price-tag">40k (tặng kèm full token A)</span></div>
+                            </div>
+                            <div class="sub-accordion-wrapper px-4">
+                                <img src="Image/Kirito.png"
+                                    onerror="this.onerror=null; this.src='Image/skillkurama.png';" class="desc-image"
+                                    alt="Kirito">
+                                <p class="text-xs text-slate-400 italic mt-2">Tặng kèm
+                                    Full Token A miễn phí ,Kirito là 1 champion cực mạnh chuyên về kiếm mà bạn ko thể bỏ
+                                    lỡ
+                                    ,ngoài ra xong quest của Kirito ta còn nhận được 5 slot champion miễn phí</p>
+                            </div>
+                        </div>
+                        <div class="service-item w-full">
+                            <div onclick="toggleSubAccordion(this)"
+                                class="service-row p-4 rounded-xl flex justify-between items-center group">
+                                <div class="flex items-center gap-2"><svg
+                                        class="chevron-sub w-3 h-3 transition-transform" fill="currentColor"
+                                        viewBox="0 0 20 20">
+                                        <path
+                                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z">
+                                        </path>
+                                    </svg><span class="text-xs md:text-sm font-bold">Minato (Yêu cầu: 250QN)</span>
+                                </div>
+                                <div class="flex items-center gap-3"><span class="hover-hint">Chi tiết</span><span
+                                        class="price-tag">30k</span></div>
+                            </div>
+                            <div class="sub-accordion-wrapper px-4">
+                                <img src="Image/minato champiom.png"
+                                    onerror="this.onerror=null; this.src='Image/skillkurama.png';" class="desc-image"
+                                    alt="Minato">
+                                <p class="text-xs text-slate-400 italic mt-2">Minato champion cực mạnh để gain charka
+                                    (175%) top 2 game và đánh boss kurama rất
+                                    ngon. Yêu cầu 250QN power,dành cho ae nào muốn sưu tầm</p>
+                            </div>
+                        </div>
+                        <div class="service-item w-full">
+                            <div onclick="toggleSubAccordion(this)"
+                                class="service-row p-4 rounded-xl flex justify-between items-center group">
+                                <div class="flex items-center gap-2"><svg
+                                        class="chevron-sub w-3 h-3 transition-transform" fill="currentColor"
+                                        viewBox="0 0 20 20">
+                                        <path
+                                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z">
+                                        </path>
+                                    </svg><span class="text-xs md:text-sm font-bold">Ace (Yêu cầu: SX)</span></div>
+                                <div class="flex items-center gap-3"><span class="hover-hint">Chi tiết</span><span
+                                        class="price-tag">60k có fix</span></div>
+                            </div>
+                            <div class="sub-accordion-wrapper px-4">
+                                <img src="Image/Ace.png" onerror="this.onerror=null; this.src='Image/skillkurama.png';"
+                                    class="desc-image" alt="Ace">
+                                <p class="text-xs text-slate-400 italic mt-2">Ace là 1 champion mạnh và hiếm nhất của
+                                    tựa game do yêu cầu power lên đến tận SP ,dành cho ae nào mún sưu tầm ,có giá trị
+                                    cao mua bán sau này .Ace cũng rất mạnh với khả năng gain streng vs durability cực
+                                    tốt </p>
+                            </div>
+                        </div>
+                        <div class="service-item w-full">
+                            <div onclick="toggleSubAccordion(this)"
+                                class="service-row p-4 rounded-xl flex justify-between items-center group">
+                                <div class="flex items-center gap-2"><svg
+                                        class="chevron-sub w-3 h-3 transition-transform" fill="currentColor"
+                                        viewBox="0 0 20 20">
+                                        <path
+                                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z">
+                                        </path>
+                                    </svg><span class="text-xs md:text-sm font-bold">Pain (Yêu cầu: 10QN)</span></div>
+                                <div class="flex items-center gap-3"><span class="hover-hint">Chi tiết</span><span
+                                        class="price-tag">30k</span></div>
+                            </div>
+                            <div class="sub-accordion-wrapper px-4">
+                                <img src="Image/Pain.png" onerror="this.onerror=null; this.src='Image/skillkurama.png';"
+                                    class="desc-image" alt="Pain">
+                                <p class="text-xs text-slate-400 italic mt-2">Pain là 1 champion
+                                    hàng đầu trong việc gain durability và streng lên đến 140% , 150% ,champion có thể
+                                    gain
+                                    hỗn hợp click nhiều loại power cực kì đa dụng , 1 lựa chọn hàng đầu của pro
+                                </p>
+                            </div>
+                        </div>
+                        <div class="service-item w-full">
+                            <div onclick="toggleSubAccordion(this)"
+                                class="service-row p-4 rounded-xl flex justify-between items-center group">
+                                <div class="flex items-center gap-2"><svg
+                                        class="chevron-sub w-3 h-3 transition-transform" fill="currentColor"
+                                        viewBox="0 0 20 20">
+                                        <path
+                                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z">
+                                        </path>
+                                    </svg><span class="text-xs md:text-sm font-bold">Chopper (Yêu cầu: T)</span></div>
+                                <div class="flex items-center gap-3"><span class="hover-hint">Chi tiết</span><span
+                                        class="price-tag">20k</span></div>
+                            </div>
+                            <div class="sub-accordion-wrapper px-4">
+                                <img src="Image/Chopper.png"
+                                    onerror="this.onerror=null; this.src='Image/skillkurama.png';" class="desc-image"
+                                    alt="Chopper">
+                                <p class="text-xs text-slate-400 italic mt-2">Dành cho rank T trở
+                                    lên , Chopper là 1 champion ngon cho newbie vs gain 100% sword and durability</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. DỊCH VỤ TREO MÁY (AFK) -->
+            <div class="accordion-item active">
+                <button onclick="toggleAccordion(this)"
+                    class="w-full flex items-center justify-between p-4 bg-slate-800/40 rounded-xl md:rounded-2xl border border-white/5">
+                    <div class="flex items-center gap-3"><span class="text-lg md:text-2xl">⏳</span>
+                        <h2 class="text-xs md:text-sm font-black uppercase text-blue-400/80">Dịch Vụ Treo Máy Theo Yêu
+                            Cầu</h2>
+                    </div>
+                    <svg class="chevron-main w-5 h-5 text-slate-500 transition-transform duration-300" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div class="accordion-content">
+                    <div class="p-2 md:p-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="service-item">
+                            <div onclick="toggleSubAccordion(this)"
+                                class="service-row p-4 text-center rounded-xl h-full flex flex-col justify-center">
+                                <p class="text-[10px] opacity-40 uppercase mb-1 font-bold">1-6 Ngày</p>
+                                <p class="price-tag text-lg">10k/n</p>
+                                <div class="mt-2 flex items-center justify-center gap-1"><span
+                                        class="hover-hint !relative !right-0 !transform-none">Xem thêm</span><svg
+                                        class="chevron-sub w-3 h-3 transition-transform" fill="currentColor"
+                                        viewBox="0 0 20 20">
+                                        <path
+                                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z">
+                                        </path>
+                                    </svg></div>
+                            </div>
+                            <div class="sub-accordion-wrapper text-center text-xs text-slate-400 italic">Treo máy liên
+                                tục 24/24 với mức giá cực rẻ ,treo tự do mọi yêu cầu bạn muốn ,khách được phép vô acc
+                                chỉ cần báo trước ,cày thuê linh hoạt đảm bảo cho khách vẫn có thời gian để chơi
+                                game.Tuy nhiên thuê lẻ ngày hay bị tình trạng kín slot khuyên ae nên treo 7 ngày đổ lên
+                            </div>
+                        </div>
+                        <div class="service-item">
+                            <div onclick="toggleSubAccordion(this)"
+                                class="service-row p-4 text-center rounded-xl h-full flex flex-col justify-center border-orange-500/20">
+                                <p class="text-[10px] opacity-40 uppercase mb-1 font-bold">Gói 7+ Ngày</p>
+                                <p class="price-tag text-lg">9k/n</p>
+                                <div class="mt-2 flex items-center justify-center gap-1"><span
+                                        class="hover-hint !relative !right-0 !transform-none">Xem thêm</span><svg
+                                        class="chevron-sub w-3 h-3 transition-transform" fill="currentColor"
+                                        viewBox="0 0 20 20">
+                                        <path
+                                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z">
+                                        </path>
+                                    </svg></div>
+                            </div>
+                            <div class="sub-accordion-wrapper text-center text-xs text-slate-400 italic">Gói 7 ngày rẻ
+                                hơn gói ngày và được treo nhanh hơn lẹ hơn ko phải chờ</div>
+                        </div>
+                        <div class="service-item">
+                            <div onclick="toggleSubAccordion(this)"
+                                class="service-row p-4 text-center rounded-xl h-full flex flex-col justify-center">
+                                <p class="text-[10px] opacity-40 uppercase mb-1 font-bold">Gói 15+ Ngày</p>
+                                <p class="price-tag text-lg">8.5k/n</p>
+                                <div class="mt-2 flex items-center justify-center gap-1"><span
+                                        class="hover-hint !relative !right-0 !transform-none">Bấm xem</span><svg
+                                        class="chevron-sub w-3 h-3 transition-transform" fill="currentColor"
+                                        viewBox="0 0 20 20">
+                                        <path
+                                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z">
+                                        </path>
+                                    </svg></div>
+                            </div>
+                            <div class="sub-accordion-wrapper text-center text-xs text-slate-400 italic">Gói giá cực tốt
+                                và
+                                có slot liền cho ae ko phải chờ ,gói tốt nhất giúp ae lên mạnh gấp hàng nghìn lần khi
+                                thuê siêu
+                                lời siêu lãi và rẻ</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. TOKEN - FRUIT - CHIKARA (ĐÃ ĐỒNG NHẤT CHỮ VÀ SỬA LỖI) -->
+            <div class="accordion-item active">
+                <button onclick="toggleAccordion(this)"
+                    class="w-full flex items-center justify-between p-4 bg-slate-800/40 rounded-xl md:rounded-2xl border border-white/5">
+                    <div class="flex items-center gap-3"><span class="text-lg md:text-2xl">💎</span>
+                        <h2 class="text-xs md:text-sm font-black uppercase text-cyan-400/80">Farm Token - Nhặt Fruit -
+                            Cày Chikara
+                        </h2>
+                    </div>
+                    <svg class="chevron-main w-5 h-5 text-slate-500 transition-transform duration-300" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div class="accordion-content">
+                    <div class="p-2 md:p-4 space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="service-item">
+                                <div onclick="toggleSubAccordion(this)"
+                                    class="service-row p-4 rounded-xl flex justify-between items-center border-orange-500/10">
+                                    <span class="text-sm md:text-base font-black uppercase tracking-tight">B
+                                        token</span>
+                                    <div class="flex items-center gap-2"><span class="hover-hint">Chi tiết</span><span
+                                            class="price-tag">5k</span></div>
+                                </div>
+                                <div class="sub-accordion-wrapper px-4 text-xs text-slate-400 italic">Token B là token
+                                    ổn cho newbie ,cày dễ ra công năng gần bằng token A .Nhưng mà lên QN power ưu tiên A
+                                    sẽ tốt hơn ,giá cực rẻ</div>
+                            </div>
+                            <div class="service-item">
+                                <div onclick="toggleSubAccordion(this)"
+                                    class="service-row p-4 rounded-xl flex justify-between items-center border-orange-500/10">
+                                    <span class="text-sm md:text-base font-black uppercase tracking-tight">A
+                                        token</span>
+                                    <div class="flex items-center gap-2"><span class="hover-hint">Chi tiết</span><span
+                                            class="price-tag">10k</span></div>
+                                </div>
+                                <div class="sub-accordion-wrapper px-4 text-xs text-slate-400 italic">A token là token
+                                    rank cao nhất game tính đến hiện tại ,giúp ae newbie cày siêu tốt và ngon ,giá hợp
+                                    lí</div>
+                            </div>
+                            <div class="service-item">
+                                <div onclick="toggleSubAccordion(this)"
+                                    class="service-row p-4 rounded-xl flex justify-between items-center border-orange-500/10">
+                                    <span class="text-sm md:text-base font-black uppercase tracking-tight">S
+                                        token</span>
+                                    <div class="flex items-center gap-2"><span class="hover-hint">Chi tiết</span><span
+                                            class="price-tag">25k</span></div>
+                                </div>
+                                <div class="sub-accordion-wrapper px-4 text-xs text-slate-400 italic">Chỉ có 1 token S
+                                    duy nhất ,hơn 1 tí so với token A ,cực hiếm và giá cao ,chờ cx lâu hơn ,dành cho ae
+                                    pro mún sưu tầm </div>
+                            </div>
+                            <div class="service-item">
+                                <div onclick="toggleSubAccordion(this)"
+                                    class="service-row p-4 rounded-xl flex justify-between items-center border-orange-500/10">
+                                    <span class="text-sm md:text-base font-black uppercase tracking-tight">Combo 2000
+                                        Token</span>
+                                    <div class="flex items-center gap-2"><span class="hover-hint">Chi tiết</span><span
+                                            class="price-tag">10k</span></div>
+                                </div>
+                                <div class="sub-accordion-wrapper px-4 text-xs text-slate-400 italic">Cho ae nào mún tự
+                                    roll hên xui cho rẻ ,ko bao ra token gì cả ,được cái nếu hên sẽ rẻ hơn thuê roll
+                                    roll</div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="service-item w-full">
+                                <div onclick="toggleSubAccordion(this)"
+                                    class="service-row p-4 rounded-xl flex justify-between items-center group">
+                                    <div class="flex items-center gap-2"><svg
+                                            class="chevron-sub w-3 h-3 transition-transform" fill="currentColor"
+                                            viewBox="0 0 20 20">
+                                            <path
+                                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z">
+                                            </path>
+                                        </svg><span
+                                            class="text-sm md:text-base font-black uppercase tracking-tight">Light
+                                            Fruit
+                                            / Random</span></div>
+                                    <div class="flex items-center gap-3"><span class="hover-hint">Xem thêm</span><span
+                                            class="price-tag">35k / 3k</span></div>
+                                </div>
+                                <div class="sub-accordion-wrapper px-4">
+                                    <p class="text-xs text-slate-400 italic mb-2">Trái Light 35k là 1 trái vô cùng mạnh
+                                        pvp và đánh boss. Random Fruit chỉ 3k cho ae nào mún gachaa test nhân phẩm. Các
+                                        trái khác 15k/1</p>
+                                </div>
+                            </div>
+                            <div class="service-item w-full">
+                                <div onclick="toggleSubAccordion(this)"
+                                    class="service-row p-4 rounded-xl flex justify-between items-center group">
+                                    <div class="flex items-center gap-2"><svg
+                                            class="chevron-sub w-3 h-3 transition-transform" fill="currentColor"
+                                            viewBox="0 0 20 20">
+                                            <path
+                                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z">
+                                            </path>
+                                        </svg><span
+                                            class="text-sm md:text-base font-black uppercase tracking-tight">Chikara
+                                            (250k/70k cho newbie)</span></div>
+                                    <div class="flex items-center gap-3"><span class="hover-hint">Xem thêm</span><span
+                                            class="price-tag">10k</span></div>
+                                </div>
+                                <div class="sub-accordion-wrapper px-4 text-xs text-slate-400 italic">250k Chikara (Yêu
+                                    cầu:
+                                    QN Dame). 70k Chikara cho Newbie. Dành cho ae mún roll Special và Champion gacha or
+                                    mở battelpass = 500k chikara</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="p-6 md:p-12 bg-slate-950/60 border-t border-white/5 relative z-10">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-10">
+                <div class="flex items-center gap-5 min-w-[280px]">
+                    <a href="https://www.facebook.com/MeoPlayTogether.22.05.2006/?locale=vi_VN" target="_blank"
+                        class="h-16 w-16 bg-blue-600 rounded-full flex items-center justify-center text-3xl social-btn-glow fb-glow hover:scale-110 transition-all">
+                        <svg width="32" height="32" fill="white" viewBox="0 0 24 24">
+                            <path
+                                d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                        </svg>
+                    </a>
+                    <div class="text-left">
+                        <p class="text-[10px] text-slate-500 font-black uppercase tracking-widest leading-none mb-1">Cần
+                            hỗ trợ tư vấn liên hệ FB</p>
+                        <p class="text-white font-black text-lg md:text-xl uppercase tracking-tighter">FB: MỀU VÔ TRI
+                        </p>
+                        <p class="text-indigo-400 font-bold text-[9px] uppercase opacity-70 tracking-tighter italic">
+                            Check uy tín tại Discord :#check-legit-uy-tin</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-5 min-w-[280px] flex-row md:flex-row-reverse">
+                    <a href="https://discord.gg/ssTA3kvG" target="_blank"
+                        class="h-16 w-16 bg-[#5865F2] rounded-full flex items-center justify-center text-3xl social-btn-glow discord-glow hover:scale-110 transition-all">
+                        <svg width="32" height="32" viewBox="0 0 127.14 96.36" fill="white">
+                            <path
+                                d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.71,32.65-1.82,56.6.39,80.21a105.73,105.73,0,0,0,32.77,16.15,77.7,77.7,0,0,0,7.74-12.2,67.43,67.43,0,0,1-10.87-5.12c.91-.66,1.8-1.34,2.66-2a75.28,75.28,0,0,0,62,0c.87.71,1.76,1.39,2.66,2a67.12,67.12,0,0,1-10.87,5.12,77.46,77.46,0,0,0,7.75,12.2,105.48,105.48,0,0,0,32.77-16.15C129.58,52.13,125.4,28.53,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.07,65.69,84.69,65.69Z" />
+                        </svg>
+                    </a>
+                    <div class="text-left md:text-right">
+                        <p class="text-[10px] text-slate-500 font-black uppercase tracking-widest leading-none mb-1">Gia
+                            nhập Discord của Mèo để giao lưu học hỏi all game </p>
+                        <p class="text-white font-black text-lg md:text-xl uppercase tracking-tighter">Discord: Động cày
+                            thuê của Mèo</p>
+                        <p
+                            class="text-orange-500 font-bold text-[10px] uppercase opacity-70 tracking-widest italic leading-none">
+                            Uy tín - Nhiệt tình - Thân thiện - Giá rẻ</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* Logic Accordion */
+        function toggleAccordion(button) {
+            const item = button.parentElement;
+            item.classList.toggle('active');
+        }
+        function toggleSubAccordion(row) {
+            const item = row.parentElement;
+            item.classList.toggle('sub-active');
+        }
+
+        /* HIỆU ỨNG SẤM SÉT (CANVAS) */
+        const canvas = document.getElementById('lightningCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Lightning {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * width;
+                this.y = 0;
+                this.path = [{ x: this.x, y: this.y }];
+                this.done = false;
+                this.opacity = 1;
+                this.createPath();
+            }
+            createPath() {
+                let currX = this.x;
+                let currY = this.y;
+                while (currY < height) {
+                    currX += (Math.random() - 0.5) * 60;
+                    currY += Math.random() * 40;
+                    this.path.push({ x: currX, y: currY });
+                }
+            }
+            draw() {
+                if (this.opacity <= 0) return;
+                ctx.beginPath();
+                ctx.strokeStyle = `rgba(200, 230, 255, ${this.opacity})`;
+                ctx.lineWidth = 2;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#4db2ff';
+                ctx.moveTo(this.path[0].x, this.path[0].y);
+                for (let i = 1; i < this.path.length; i++) {
+                    ctx.lineTo(this.path[i].x, this.path[i].y);
+                }
+                ctx.stroke();
+                this.opacity -= 0.05; // Mờ dần
+            }
+        }
+
+        let lightnings = [];
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            // Ngẫu nhiên tạo sét mới (tỉ lệ 2%)
+            if (Math.random() < 0.02) {
+                lightnings.push(new Lightning());
+                // Hiệu ứng chớp nền nhẹ khi có sét
+                if (Math.random() < 0.5) {
+                    document.body.style.backgroundColor = '#1e293b';
+                    setTimeout(() => document.body.style.backgroundColor = '#020617', 50);
+                }
+            }
+
+            lightnings.forEach((l, index) => {
+                l.draw();
+                if (l.opacity <= 0) lightnings.splice(index, 1);
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        window.onload = function () {
+            animate();
+        };
+    </script>
+</body>
+
+</html>
