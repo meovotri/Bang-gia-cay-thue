@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banner Dịch Vụ Cày Thuê AFSE - Pro Interactive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #020617;
+            color: #f8fafc;
+            overflow-x: hidden;
+            margin: 0;
+            transition: background-color 1s ease;
+        }
+
+        /* Canvas nền cho Hiệu Ứng Thời Tiết */
+        #weatherCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        /* Hiệu ứng chớp (Sấm sét) */
+        #flashOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 51;
+            transition: opacity 0.1s;
+        }
+
+        /* Viền khung Premium */
+        .gaming-card {
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            z-index: 10;
+        }
+
+        .gaming-card::before {
+            content: "";
+            position: absolute;
+            inset: -1px;
+            z-index: -1;
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.3) 0%, rgba(30, 41, 59, 0) 50%, rgba(234, 88, 12, 0.3) 100%);
+            border-radius: inherit;
+        }
+
+        /* Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-reveal {
+            animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            opacity: 0;
+        }
+
+        .delay-1 {
+            animation-delay: 0.1s;
+        }
+
+        .delay-2 {
+            animation-delay: 0.2s;
+        }
+
+        .delay-3 {
+            animation-delay: 0.3s;
+        }
+
+        .delay-4 {
+            animation-delay: 0.4s;
+        }
+
+        .delay-5 {
+            animation-delay: 0.5s;
+        }
+
+        /* Accordion */
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.6s ease-in-out;
+        }
+
+        .accordion-item.active>.accordion-content {
+            max-height: none;
+            overflow: visible;
+        }
+
+        .accordion-item.active>button .chevron-main {
+            transform: rotate(180deg);
+        }
+
+        /* Service Row */
+        .service-row {
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .service-row:hover {
+            border-color: rgba(249, 115, 22, 0.6);
+            background: rgba(249, 115, 22, 0.12);
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.1);
+        }
+
+        .price-tag {
+            color: #fbbf24;
+            font-weight: 800;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-card {
+            background: #0f172a;
+            border: 1px solid #f97316;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            /* Giới hạn chiều cao */
+            overflow-y: auto;
+            /* Cho phép cuộn nếu nội dung dài */
+            padding: 24px;
+            position: relative;
+            transform: scale(0.8);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 50px rgba(249, 115, 22, 0.2);
+        }
+
+        .modal-overlay.open .modal-card {
+            transform: scale(1);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            color: #94a3b8;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .modal-image {
+            width: 100%;
+            height: 180px;
+            object-fit: contain;
+            background: #1e293b;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 12px;
+        }
+
+        .modal-image-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .modal-image-grid img {
+            width: 100%;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .contact-options {
+            display: grid;
+            /* Luôn hiển thị */
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .contact-btn {
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: transform 0.2s;
+            text-transform: uppercase;
+        }
+
+        .contact-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-fb {
+            background: #1877F2;
+            color: white;
+        }
+
+        .btn-dc {
+            background: #5865F2;
+            color: white;
+        }
+
+        .btn-copy {
+            background: #f59e0b;
+            color: white;
+            margin-top: 10px;
+            width: 100%;
+            justify-content: center;
+            display: flex;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* QR Code Section */
+        .qr-section {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: 12px;
+            margin-top: 15px;
+            border: 1px dashed rgba(249, 115, 22, 0.3);
+        }
+
+        .qr-img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .qr-info p {
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .qr-bank {
+            font-weight: 900;
+            color: #c82838;
+            text-transform: uppercase;
+        }
+
+        .qr-num {
+            font-family: monospace;
+            font-size: 1.1em;
+            color: #fbbf24;
+            font-weight: bold;
+        }
+
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background: rgba(6, 78, 59, 0.9);
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1000;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            border: 1px solid #22c55e;
+        }
+
+        #toast.show {
+            visibility: visible;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+
+        @keyframes fadein {
+            from {
+                bottom: 0;
+                opacity: 0;
+            }
+
+            to {
+                bottom: 30px;
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeout {
+            from {
+                bottom: 30px;
+                opacity: 1;
+            }
+
+            to {
+                bottom: 0;
+                opacity: 0;
+            }
+        }
+
+        /* Effects */
+        .hero-fox-glow {
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+            animation: fox-breathe 4s infinite alternate;
+        }
+
+        @keyframes fox-breathe {
+            0% {
+                box-shadow: 0 0 15px rgba(249, 115, 22, 0.2);
+            }
+
+            100% {
+                box-shadow: 0 0 30px rgba(249, 115, 22, 0.6);
+            }
+        }
+
+        .social-btn-glow {
+            transition: all 0.3s ease;
+        }
+
+        .fb-glow {
+            animation: pulse-blue 2.5s infinite;
+        }
+
+        .discord-glow {
+            animation: pulse-indigo 2.5s infinite;
+        }
+
+        @keyframes pulse-blue {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.6);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+            }
+        }
+
+        @keyframes pulse-indigo {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(88, 101, 242, 0.6);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(88, 101, 242, 0);
+            }
+        }
+
+        #weatherInfo {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.3);
+            z-index: 40;
+            pointer-events: none;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body class="p-2 sm:p-4 md:p-10 flex justify-center items-start min-h-screen bg-[#020617]">
+
+    <canvas id="weatherCanvas"></canvas>
+    <div id="flashOverlay"></div>
+    <div id="weatherInfo">Loading Weather...</div>
+    <div id="toast"><i class="fas fa-check-circle"></i> Đã copy nội dung đơn hàng!</div>
+
+    <div id="serviceModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-close" onclick="closeModal()">&times;</div>
+            <h3 id="modalTitle" class="text-xl font-bold text-white mb-1">Tên Dịch Vụ</h3>
+            <p id="modalPrice" class="text-2xl font-black text-orange-500 mb-4">0k</p>
+
+            <div id="modalImageContainer"></div>
+
+            <div class="bg-slate-900/50 p-4 rounded-lg border border-white/5 mb-4">
+                <p id="modalDesc" class="text-sm text-slate-300 leading-relaxed italic">Mô tả...</p>
+            </div>
+
+            <!-- QR Code Section -->
+            <div class="qr-section">
+                <!-- Placeholder ảnh QR, nếu có file ảnh thật hãy thay vào src -->
+                <img src="Image/Qrbank.png" alt="QR MB Bank" class="qr-img"
+                    onerror="this.src='https://via.placeholder.com/80x80?text=QR+Code'">
+                <div class="qr-info">
+                    <p class="text-[10px] text-slate-400 uppercase font-bold">Thanh toán qua ngân hàng</p>
+                    <p class="qr-bank">MB BANK</p>
+                    <p class="qr-num">0367494148</p>
+                    <p class="text-[10px] text-white font-bold">HOANG TUAN KIET</p>
+                </div>
+            </div>
+
+            <!-- Contact Buttons (Luôn hiện) -->
+            <div class="contact-options">
+                <a onclick="processOrder('facebook')" class="contact-btn btn-fb">
+                    <i class="fab fa-facebook-messenger"></i> Facebook
+                </a>
+                <a onclick="processOrder('discord')" class="contact-btn btn-dc">
+                    <i class="fab fa-discord"></i> Discord
+                </a>
+            </div>
+
+            <!-- Copy Button Only -->
+            <div onclick="processOrder('copy')" class="btn-copy">
+                <i class="fas fa-copy mr-2"></i> Copy Nội Dung Đơn
+            </div>
+        </div>
+    </div>
+
+    <div
+        class="max-w-5xl w-full gaming-card rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden relative animate-reveal">
+        <div class="absolute top-0 right-0 opacity-[0.02] pointer-events-none -mr-20 -mt-20">
+            <svg width="450" height="450" viewBox="0 0 24 24" fill="#f97316">
+                <path d="M12,2L4.5,20.29L5.21,21L12,18L18.79,21L19.5,20.29L12,2Z" />
+            </svg>
+        </div>
+
+        <div
+            class="relative bg-slate-900/30 flex flex-col items-center justify-center text-center p-6 pt-10 border-b border-white/5">
+            <h1
+                class="text-2xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight text-white mb-2 animate-reveal delay-2">
+                BẢNG GIÁ CÀY THUÊ <span class="text-orange-500">[AFSE]</span>
+            </h1>
+            <p
+                class="text-[10px] sm:text-xs md:text-sm font-bold text-slate-400 tracking-[0.3em] uppercase animate-reveal delay-3 mb-6">
+                UY TÍN • NHANH CHÓNG • GIÁ RẺ
+            </p>
+            <div class="w-full max-w-[500px] relative animate-reveal delay-4 group cursor-pointer">
+                <div
+                    class="absolute -inset-1 bg-gradient-to-r from-orange-600 to-red-600 rounded-xl blur opacity-25 group-hover:opacity-60 transition duration-500">
+                </div>
+                <img src="Image/afse.png" alt="Hero avatar"
+                    class="relative w-full h-[250px] md:h-[300px] object-cover object-top rounded-xl border border-orange-500/50 shadow-2xl hero-fox-glow transform group-hover:scale-[1.01] transition-all duration-500">
+                <div
+                    class="absolute bottom-4 right-4 bg-orange-600/90 text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg backdrop-blur-sm">
+                    Mều Zô Tri</div>
+            </div>
+        </div>
+
+        <div class="p-4 sm:p-6 md:p-10 space-y-6 md:space-y-10 animate-reveal delay-5">
+            <!-- 1. UPDATE -->
+            <div class="accordion-item">
+                <button onclick="toggleAccordion(this)"
+                    class="w-full flex items-center justify-between p-4 bg-slate-800/40 rounded-xl md:rounded-2xl border border-white/5">
+                    <div class="flex items-center gap-3"><span class="text-xl md:text-2xl">🚀</span>
+                        <h2 class="text-xs md:text-sm font-black uppercase text-orange-500/90">Dịch Vụ Update New
+                            (Update 4.0)</h2>
+                    </div>
+                    <svg class="chevron-main w-5 h-5 text-slate-500 transition-transform duration-300" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div class="accordion-content">
+                    <div class="p-2 md:p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="service-item w-full">
+                            <div onclick="openServiceModal(this)"
+                                class="service-row p-4 rounded-xl flex justify-between items-center group"
+                                data-title="Full Battlepass" data-price="88k" data-img="Image/fightingpass.png"
+                                data-multi-img="Image/fightingpass.png,Image/Rocklee.webp,Image/Kakashi.webp,Image/Narutolucdao.webp,Image/Shank.webp"
+                                data-desc="Hoàn thành trong 25 ngày. Nhận full quà Battlepass. Cày bằng dayli quest , lẻ 3k5/ 1 ngày ,nếu đã cày sẵn thì sẽ giảm giá tiền tùy theo level hiện tại , Gói siêu ngon với 4 champion free mạnh nhất game ,chỉ nhận tối đa 12 slot giá 88k, sau 12 slot nhận với giá 125k">
+                                <div class="flex items-center gap-2"><i
+                                        class="fas fa-info-circle text-orange-500"></i><span
+                                        class="text-xs md:text-sm font-bold">Full Battlepass</span></div>
+                                <span class="price-tag">88k</span>
+                            </div>
+                        </div>
+                        <div class="service-item w-full">
+                            <div onclick="openServiceModal(this)"
+                                class="service-row p-4 rounded-xl flex justify-between items-center group"
+                                data-title="Full Skill Boss Kurama" data-price="40k" data-img="Image/skillkurama.png"
+                                data-desc="Cày full kỹ năng từ Boss Kurama, kỹ năng rất mạnh chuyên PVP/Boss. Nếu có skill gì rồi sẽ trừ tiền ra.">
+                                <div class="flex items-center gap-2"><i class="fas fa-bolt text-yellow-400"></i><span
+                                        class="text-xs md:text-sm font-bold">Full Skill Boss Kurama</span></div>
+                                <span class="price-tag">40k</span>
+                            </div>
+                        </div>
+                        <div class="service-item w-full">
+                            <div onclick="openServiceModal(this)"
+                                class="service-row p-4 rounded-xl flex justify-between items-center group"
+                                data-title="Minato Quest" data-price="70k" data-img="Image/Minato quest.png"
+                                data-desc="Hoàn thành NPC Minato nhận 5 slot champion rương free ,Yêu cầu SX power, có token , quest cho ae end game content cày ,ko phù hợp cho newbie vì quà chủ yếu là boost thời gian treo máy ! Ai mún treo máy hiệu quả có thể cày quets này">
+                                <div class="flex items-center gap-2"><i class="fas fa-scroll text-blue-300"></i><span
+                                        class="text-xs md:text-sm font-bold">Minato Quest</span></div>
+                                <span class="price-tag">70k</span>
+                            </div>
+                        </div>
+                        <div class="service-item w-full">
+                            <div onclick="openServiceModal(this)"
+                                class="service-row p-4 rounded-xl flex justify-between items-center group"
+                                data-title="Minato Champion" data-price="30k" data-img="Image/minato champiom.png"
+                                data-desc="Minato champion cực mạnh để gain charka (175%) top 2 game và đánh boss kurama rất ngon. Yêu cầu 250QN power,dành cho ae nào muốn sưu tầm">
+                                <div class="flex items-center gap-2"><i
+                                        class="fas fa-user-ninja text-yellow-500"></i><span
+                                        class="text-xs md:text-sm font-bold">Minato Champion</span></div>
+                                <span class="price-tag">30k</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. POWER UP -->
+            <div class="accordion-item">
+                <button onclick="toggleAccordion(this)"
+                    class="w-full flex items-center justify-between p-4 bg-slate-800/40 rounded-xl md:rounded-2xl border border-white/5">
+                    <div class="flex items-center gap-3"><span class="text-lg md:text-2xl">⚡</span>
+                        <h2 class="text-xs md:text-sm font-black uppercase text-yellow-500/80">Power Up (0 ➡️ SP)</h2>
+                    </div>
+                    <svg class="chevron-main w-5 h-5 text-slate-500 transition-transform duration-300" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div class="accordion-content">
+                    <div class="p-2 md:p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="service-item w-full">
+                            <div onclick="openServiceModal(this)"
+                                class="service-row p-4 rounded-xl flex justify-between items-center group"
+                                data-title="Power Up (0 ➡️ QN)" data-price="80k" data-img="Image/anhwaifu1.png"
+                                data-desc="Tặng Full Token A & QN Power đi kèm với champion Kirito gain 125% sword cực ngon . Tiền đề đánh rimuru ,pain ,minato ,QN power .Có fix tùy theo power của khách">
+                                <div class="flex items-center gap-2"><i
+                                        class="fas fa-level-up-alt text-green-400"></i><span
+                                        class="text-xs md:text-sm font-bold">(0 ➡️ QN)</span></div>
+                                <span class="price-tag">80k</span>
+                            </div>
+                        </div>
+                        <div class="service-item w-full">
+                            <div onclick="openServiceModal(this)"
+                                class="service-row p-4 rounded-xl flex justify-between items-center group"
+                                data-title="Power Up (QN ➡️ SX)" data-price="40k" data-img="Image/anhwaifu2.png"
+                                data-desc="Yêu cầu Full Token A đổ lên. Giá cao hơn nếu ko có gamepass , token : 70k">
+                                <div class="flex items-center gap-2"><i
+                                        class="fas fa-angle-double-up text-cyan-400"></i><span
+                                        class="text-xs md:text-sm font-bold">(QN ➡️ SX)</span></div>
+                                <span class="price-tag">40k</span>
+                            </div>
+                        </div>
+                        <div class="service-item w-full">
+                            <div onclick="openServiceModal(this)"
+                                class="service-row p-4 rounded-xl flex justify-between items-center group"
+                                data-title="Power Up (SX ➡️ SP)" data-price="50k" data-img="Image/anhwaifu3.png"
+                                data-desc="Power cao nhất để chinh phục game hiện tại ,dành cho ae hướng đến cày ACE ,ko gamepass 100k yêu cầu max token A">
+                                <div class="flex items-center gap-2"><i class="fas fa-crown text-purple-400"></i><span
+                                        class="text-xs md:text-sm font-bold">(SX ➡️ SP)</span></div>
+                                <span class="price-tag">50k</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. CHAMPION -->
+            <div class="accordion-item">
+                <button onclick="toggleAccordion(this)"
+                    class="w-full flex items-center justify-between p-4 bg-slate-800/40 rounded-xl md:rounded-2xl border border-white/5">
+                    <div class="flex items-center gap-3"><span class="text-lg md:text-2xl">⚔️</span>
+                        <h2 class="text-xs md:text-sm font-black uppercase text-red-500/80">Săn Champion (Bao ra)</h2>
+                    </div>
+                    <svg class="chevron-main w-5 h-5 text-slate-500 transition-transform duration-300" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div class="accordion-content">
+                    <div class="p-2 md:p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="service-item w-full">
+                            <div onclick="openServiceModal(this)"
+                                class="service-row p-4 rounded-xl flex justify-between items-center group"
+                                data-title="Săn Rimuru" data-price="30k" data-img="Image/Rimuru.png"
+                                data-desc="Rimuru là 1 champion gain charka top 1 của game với 200% là sự lựa chọn hàng đầu của tất cả pro kì cựu ,đánh boss ngon tăng 50% dame">
+                                <div class="flex items-center gap-2"><i
+                                        class="fas fa-crosshairs text-slate-300"></i><span
+                                        class="text-xs md:text-sm font-bold">Rimuru (Yêu cầu: 2QN)</span></div>
+                                <span class="price-tag">30k</span>
+                            </div>
+                        </div>
+                        <div class="service-item w-full">
+                            <div onclick="openServiceModal(this)"
+                                class="service-row p-4 rounded-xl flex justify-between items-center group"
+                                data-title="Săn Kirito" data-price="40k" data-img="Image/Kirito.png"
+                                data-desc="Tặng kèm Full Token A miễn phí ,Kirito là 1 champion cực mạnh chuyên về kiếm mà bạn ko thể bỏ lỡ ,ngoài ra xong quest của Kirito ta còn nhận được 5 slot champion miễn phí">
+                                <div class="flex items-center gap-2"><i class="fas fa-khanda text-slate-300"></i><span
+                                        class="text-xs md:text-sm font-bold">Kirito (Yêu cầu: QD)</span></div>
+                                <span class="price-tag">40k</span>
+                            </div>
+                        </div>
+                        <div class="service-item w-full">
+                            <div onclick="openServiceModal(this)"
+                                class="service-row p-4 rounded-xl flex justify-between items-center group"
+                                data-title="Săn Minato" data-price="30k" data-img="Image/minato champiom.png"
+                                data-desc="Minato champion cực mạnh để gain charka (175%) top 2 game và đánh boss kurama rất ngon. Yêu cầu 250QN power,dành cho ae nào muốn sưu tầm">
+                                <div class="flex items-center gap-2"><i class="fas fa-bolt text-slate-300"></i><span
+                                        class="text-xs md:text-sm font-bold">Minato (Yêu cầu: 250QN)</span></div>
+                                <span class="price-tag">30k</span>
+                            </div>
+                        </div>
+                        <div class="service-item w-full">
+                            <div onclick="openServiceModal(this)"
+                                class="service-row p-4 rounded-xl flex justify-between items-center group"
+                                data-title="Săn Ace" data-price="60k" data-img="Image/Ace.png"
+                                data-desc="Ace là 1 champion mạnh và hiếm nhất của tựa game do yêu cầu power lên đến tận SP ,dành cho ae nào mún sưu tầm ,có giá trị cao mua bán sau này .Ace cũng rất mạnh với khả năng gain streng vs durability cực tốt">
+                                <div class="flex items-center gap-2"><i class="fas fa-fire text-slate-300"></i><span
+                                        class="text-xs md:text-sm font-bold">Ace (Yêu cầu: SX)</span></div>
+                                <span class="price-tag">60k (có fix)</span>
+                            </div>
+                        </div>
+                        <div class="service-item w-full">
+                            <div onclick="openServiceModal(this)"
+                                class="service-row p-4 rounded-xl flex justify-between items-center group"
+                                data-title="Săn Pain" data-price="30k" data-img="Image/Pain.png"
+                                data-desc="Pain là 1 champion hàng đầu trong việc gain durability và streng lên đến 140% , 150% ,champion có thể gain hỗn hợp click nhiều loại power cực kì đa dụng , 1 lựa chọn hàng đầu của pro">
+                                <div class="flex items-center gap-2"><i
+                                        class="fas fa-user-secret text-slate-300"></i><span
+                                        class="text-xs md:text-sm font-bold">Pain (Yêu cầu: 10QN)</span></div>
+                                <span class="price-tag">30k</span>
+                            </div>
+                        </div>
+                        <div class="service-item w-full">
+                            <div onclick="openServiceModal(this)"
+                                class="service-row p-4 rounded-xl flex justify-between items-center group"
+                                data-title="Săn Chopper" data-price="20k" data-img="Image/Chopper.png"
+                                data-desc="Dành cho rank T trở lên , Chopper là 1 champion ngon cho newbie vs gain 100% sword and durability">
+                                <div class="flex items-center gap-2"><i class="fas fa-paw text-slate-300"></i><span
+                                        class="text-xs md:text-sm font-bold">Chopper (Yêu cầu: T)</span></div>
+                                <span class="price-tag">20k</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. TREO MÁY -->
+            <div class="accordion-item">
+                <button onclick="toggleAccordion(this)"
+                    class="w-full flex items-center justify-between p-4 bg-slate-800/40 rounded-xl md:rounded-2xl border border-white/5">
+                    <div class="flex items-center gap-3"><span class="text-lg md:text-2xl">⏳</span>
+                        <h2 class="text-xs md:text-sm font-black uppercase text-blue-400/80">Dịch Vụ Treo Máy Theo Yêu
+                            Cầu</h2>
+                    </div>
+                    <svg class="chevron-main w-5 h-5 text-slate-500 transition-transform duration-300" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div class="accordion-content">
+                    <div class="p-2 md:p-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="service-item h-full">
+                            <div onclick="openServiceModal(this)"
+                                class="service-row p-4 text-center rounded-xl h-full flex flex-col justify-center"
+                                data-title="Treo Máy (1-6 Ngày)" data-price="10k/ngày" data-img="Image/anhwaifu4.png"
+                                data-desc="Treo máy liên tục 24/24 với mức giá cực rẻ ,treo tự do mọi yêu cầu bạn muốn ,khách được phép vô acc chỉ cần báo trước ,cày thuê linh hoạt đảm bảo cho khách vẫn có thời gian để chơi game.Tuy nhiên thuê lẻ ngày hay bị tình trạng kín slot khuyên ae nên treo 7 ngày đổ lên">
+                                <div class="mb-2"><i class="fas fa-clock text-blue-400 text-2xl"></i></div>
+                                <p class="text-[10px] opacity-40 uppercase mb-1 font-bold">1-6 Ngày</p>
+                                <p class="price-tag text-lg">10k/n</p>
+                                <div class="mt-2 text-xs text-slate-400">Xem chi tiết</div>
+                            </div>
+                        </div>
+                        <div class="service-item h-full">
+                            <div onclick="openServiceModal(this)"
+                                class="service-row p-4 text-center rounded-xl h-full flex flex-col justify-center border-orange-500/20"
+                                data-title="Treo Máy (Gói 7+ Ngày)" data-price="9k/ngày" data-img="Image/anhwaifu4.png"
+                                data-desc="Gói 7 ngày rẻ hơn gói ngày và được treo nhanh hơn lẹ hơn ko phải chờ">
+                                <div class="mb-2"><i class="fas fa-clock text-blue-400 text-2xl"></i></div>
+                                <p class="text-[10px] opacity-40 uppercase mb-1 font-bold">Gói 7+ Ngày</p>
+                                <p class="price-tag text-lg">9k/n</p>
+                                <div class="mt-2 text-xs text-slate-400">Xem chi tiết</div>
+                            </div>
+                        </div>
+                        <div class="service-item h-full">
+                            <div onclick="openServiceModal(this)"
+                                class="service-row p-4 text-center rounded-xl h-full flex flex-col justify-center"
+                                data-title="Treo Máy (Gói 15+ Ngày)" data-price="8.5k/ngày" data-img="Image/anhwaifu4.png"
+                                data-desc="Gói giá cực tốt và có slot liền cho ae ko phải chờ ,gói tốt nhất giúp ae lên mạnh gấp hàng nghìn lần khi thuê siêu lời siêu lãi và rẻ">
+                                <div class="mb-2"><i class="fas fa-clock text-blue-400 text-2xl"></i></div>
+                                <p class="text-[10px] opacity-40 uppercase mb-1 font-bold">Gói 15+ Ngày</p>
+                                <p class="price-tag text-lg">8.5k/n</p>
+                                <div class="mt-2 text-xs text-slate-400">Xem chi tiết</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. TOKEN -->
+            <div class="accordion-item">
+                <button onclick="toggleAccordion(this)"
+                    class="w-full flex items-center justify-between p-4 bg-slate-800/40 rounded-xl md:rounded-2xl border border-white/5">
+                    <div class="flex items-center gap-3"><span class="text-lg md:text-2xl">💎</span>
+                        <h2 class="text-xs md:text-sm font-black uppercase text-cyan-400/80">Farm Token - Nhặt Fruit -
+                            Cày Chikara</h2>
+                    </div>
+                    <svg class="chevron-main w-5 h-5 text-slate-500 transition-transform duration-300" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div class="accordion-content">
+                    <div class="p-2 md:p-4 space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="service-item">
+                                <div onclick="openServiceModal(this)"
+                                    class="service-row p-4 rounded-xl flex justify-between items-center border-orange-500/10"
+                                    data-title="Farm B Token" data-price="5k" data-img="Image/meoavt.png"
+                                    data-desc="Token B là token ổn cho newbie ,cày dễ ra công năng gần bằng token A .Nhưng mà lên QN power ưu tiên A sẽ tốt hơn ,giá cực rẻ">
+                                    <div class="flex items-center gap-2"><i
+                                            class="fas fa-coins text-yellow-400"></i><span
+                                            class="text-sm md:text-base font-black uppercase tracking-tight">B
+                                            Token</span></div>
+                                    <span class="price-tag">5k</span>
+                                </div>
+                            </div>
+                            <div class="service-item">
+                                <div onclick="openServiceModal(this)"
+                                    class="service-row p-4 rounded-xl flex justify-between items-center border-orange-500/10"
+                                    data-title="Farm A Token" data-price="10k" data-img="Image/meoavt.png"
+                                    data-desc="A token là token rank cao nhất game tính đến hiện tại ,giúp ae newbie cày siêu tốt và ngon ,giá hợp lí">
+                                    <div class="flex items-center gap-2"><i
+                                            class="fas fa-coins text-yellow-400"></i><span
+                                            class="text-sm md:text-base font-black uppercase tracking-tight">A
+                                            Token</span></div>
+                                    <span class="price-tag">10k</span>
+                                </div>
+                            </div>
+                            <div class="service-item">
+                                <div onclick="openServiceModal(this)"
+                                    class="service-row p-4 rounded-xl flex justify-between items-center border-orange-500/10"
+                                    data-title="Farm S Token" data-price="25k" data-img="Image/meoavt.png"
+                                    data-desc="Chỉ có 1 token S duy nhất ,hơn 1 tí so với token A ,cực hiếm và giá cao ,chờ cx lâu hơn ,dành cho ae pro mún sưu tầm">
+                                    <div class="flex items-center gap-2"><i
+                                            class="fas fa-coins text-yellow-400"></i><span
+                                            class="text-sm md:text-base font-black uppercase tracking-tight">S
+                                            Token</span></div>
+                                    <span class="price-tag">25k</span>
+                                </div>
+                            </div>
+                            <div class="service-item">
+                                <div onclick="openServiceModal(this)"
+                                    class="service-row p-4 rounded-xl flex justify-between items-center border-orange-500/10"
+                                    data-title="Combo 2000 Token (Random)" data-price="10k" data-img="Image/meoavt.png"
+                                    data-desc="Cho ae nào mún tự roll hên xui cho rẻ ,ko bao ra token gì cả ,được cái nếu hên sẽ rẻ hơn thuê roll roll">
+                                    <div class="flex items-center gap-2"><i
+                                            class="fas fa-coins text-yellow-400"></i><span
+                                            class="text-sm md:text-base font-black uppercase tracking-tight">Combo 2000
+                                            Token</span></div>
+                                    <span class="price-tag">10k</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="service-item w-full">
+                                <div onclick="openServiceModal(this)"
+                                    class="service-row p-4 rounded-xl flex justify-between items-center group"
+                                    data-title="Nhặt Light Fruit / Random" data-price="35k / 3k"
+                                    data-img="Image/anhwaifu5.png"
+                                    data-desc="Trái Light 35k là 1 trái vô cùng mạnh pvp và đánh boss. Random Fruit chỉ 3k cho ae nào mún gachaa test nhân phẩm. Các trái khác 15k/1">
+                                    <div class="flex items-center gap-2"><i
+                                            class="fas fa-lemon text-yellow-200"></i><span
+                                            class="text-sm md:text-base font-black uppercase tracking-tight">Light Fruit
+                                            / Random</span></div>
+                                    <span class="price-tag">35k / 3k</span>
+                                </div>
+                            </div>
+                            <div class="service-item w-full">
+                                <div onclick="openServiceModal(this)"
+                                    class="service-row p-4 rounded-xl flex justify-between items-center group"
+                                    data-title="Cày Chikara" data-price="10k" data-img="anhwaifu6.png"
+                                    data-desc="250k Chikara (Yêu cầu: QN Dame). 70k Chikara cho Newbie. Dành cho ae mún roll Special và Champion gacha or mở battelpass = 500k chikara">
+                                    <div class="flex items-center gap-2"><i
+                                            class="fas fa-database text-red-400"></i><span
+                                            class="text-sm md:text-base font-black uppercase tracking-tight">Chikara
+                                            (250k/70k)</span></div>
+                                    <span class="price-tag">10k</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 md:p-12 bg-slate-950/60 border-t border-white/5 relative z-10">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-10">
+                <div class="flex items-center gap-5 min-w-[280px]">
+                    <a href="https://www.facebook.com/MeoPlayTogether.22.05.2006/?locale=vi_VN" target="_blank"
+                        class="h-16 w-16 bg-blue-600 rounded-full flex items-center justify-center text-3xl social-btn-glow fb-glow hover:scale-110 transition-all"><i
+                            class="fab fa-facebook-f"></i></a>
+                    <div class="text-left">
+                        <p class="text-[10px] text-slate-500 font-black uppercase tracking-widest leading-none mb-1">CẦN
+                            TƯ VẤN LIÊN HỆ FB</p>
+                        <p class="text-white font-black text-lg md:text-xl uppercase tracking-tighter">FB: MỀU VÔ TRI
+                        </p>
+                        <p class="text-indigo-400 font-bold text-[9px] uppercase opacity-70 tracking-tighter italic">
+                            Check uy tín tại Discord :#check-legit-uy-tin</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-5 min-w-[280px] flex-row md:flex-row-reverse">
+                    <a href="https://discord.com/users/1123886807717789737" target="_blank"
+                        class="h-16 w-16 bg-[#5865F2] rounded-full flex items-center justify-center text-3xl social-btn-glow discord-glow hover:scale-110 transition-all"><i
+                            class="fab fa-discord"></i></a>
+                    <div class="text-left md:text-right">
+                        <p class="text-[10px] text-slate-500 font-black uppercase tracking-widest leading-none mb-1">GIA
+                            NHẬP DISCORD Giao lưu - Học hỏi</p>
+                        <p class="text-white font-black text-lg md:text-xl uppercase tracking-tighter">DISCORD: Động Cày Thuê Của Mèo</p>
+                        <p
+                            class="text-orange-500 font-bold text-[10px] uppercase opacity-70 tracking-widest italic leading-none">
+                            Uy tín - Nhiệt tình - Thân thiện - Giá rẻ</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleAccordion(button) { button.parentElement.classList.toggle('active'); }
+        const modal = document.getElementById('serviceModal'), titleNode = document.getElementById('modalTitle'), priceNode = document.getElementById('modalPrice'), imgContainer = document.getElementById('modalImageContainer'), descNode = document.getElementById('modalDesc'), contactOpts = document.getElementById('contactOptions');
+
+        const FB_LINK = "https://m.me/MeoPlayTogether.22.05.2006";
+        const DISCORD_LINK = "https://discord.com/users/1123886807717789737";
+
+        function openServiceModal(el) {
+            titleNode.innerText = el.getAttribute('data-title');
+            priceNode.innerText = el.getAttribute('data-price');
+            descNode.innerText = el.getAttribute('data-desc');
+            imgContainer.innerHTML = '';
+            const multi = el.getAttribute('data-multi-img');
+            if (multi) {
+                const list = multi.split(',');
+                imgContainer.innerHTML += `<img src="${list[0]}" class="modal-image">`;
+                let grid = '<div class="modal-image-grid">';
+                for (let i = 1; i < list.length; i++) grid += `<img src="${list[i]}" onerror="this.src='Image/meoavt.png'">`;
+                imgContainer.innerHTML += grid + '</div>';
+            } else {
+                imgContainer.innerHTML = `<img src="${el.getAttribute('data-img')}" class="modal-image" onerror="this.src='Image/meoavt.png'">`;
+            }
+            modal.classList.add('open');
+        }
+        function closeModal() { modal.classList.remove('open'); }
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+        function copyToClipboard(text, onSuccess, onError) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(onSuccess).catch(() => fallbackCopy(text, onSuccess, onError));
+            } else { fallbackCopy(text, onSuccess, onError); }
+        }
+        function fallbackCopy(text, onSuccess, onError) {
+            try {
+                const ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.left = "-9999px"; document.body.appendChild(ta); ta.select();
+                const ok = document.execCommand('copy'); document.body.removeChild(ta);
+                if (ok) onSuccess(); else onError();
+            } catch (err) { onError(); }
+        }
+        function processOrder(plat) {
+            if (plat === 'copy') {
+                const msg = `Chào shop, mình muốn đặt đơn: ${titleNode.innerText}. Giá: ${priceNode.innerText}. Mong shop tư vấn giúp mình ạ!`;
+                copyToClipboard(msg, () => {
+                    const toast = document.getElementById("toast"); toast.className = "show"; setTimeout(() => toast.className = "", 3000);
+                }, () => alert("Lỗi copy"));
+            } else {
+                window.open(plat === 'facebook' ? FB_LINK : DISCORD_LINK, '_blank');
+            }
+        }
+
+        /* --- WEATHER SYSTEM (20 TYPES) --- */
+        const canvas = document.getElementById('weatherCanvas');
+        const ctx = canvas.getContext('2d');
+        const flashOverlay = document.getElementById('flashOverlay');
+        const weatherInfo = document.getElementById('weatherInfo');
+        let width, height;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // 20 Loại Thời Tiết
+        const WEATHER_TYPES = [
+            'CLEAR', 'LIGHT_RAIN', 'HEAVY_RAIN', 'STORM', 'SNOW',
+            'WIND', 'METEOR', 'FIREFLIES', 'LEAVES', 'FOG',
+            'SAKURA', 'EMBER', 'BUBBLES', 'STARS_FALLING', 'SANDSTORM',
+            'POLLEN', 'RAINBOW_RAIN', 'GALAXY', 'ICY_WIND', 'GOLDEN_DUST'
+        ];
+
+        let currentWeather = '';
+        let particles = [];
+        let timeSinceLastSwitch = 0;
+        const SWITCH_INTERVAL = 1500; // 25s (60fps * 25)
+
+        class Particle {
+            constructor(type) {
+                this.type = type;
+                this.reset();
+            }
+
+            reset() {
+                switch (this.type) {
+                    case 'CLEAR':
+                        this.x = Math.random() * width; this.y = Math.random() * height;
+                        this.size = Math.random() * 2; this.alpha = Math.random(); this.blinkSpeed = 0.01 + Math.random() * 0.03;
+                        break;
+                    case 'LIGHT_RAIN':
+                    case 'RAINBOW_RAIN':
+                        this.x = Math.random() * width; this.y = Math.random() * -height;
+                        this.vy = 5 + Math.random() * 5; this.len = 10 + Math.random() * 10;
+                        if (this.type === 'RAINBOW_RAIN') this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                        break;
+                    case 'HEAVY_RAIN':
+                    case 'STORM':
+                        this.x = Math.random() * width; this.y = Math.random() * -height;
+                        this.vy = 15 + Math.random() * 10; this.len = 20 + Math.random() * 20;
+                        break;
+                    case 'SNOW':
+                        this.x = Math.random() * width; this.y = Math.random() * -height;
+                        this.vy = 1 + Math.random() * 2; this.vx = (Math.random() - 0.5) * 2; this.size = 2 + Math.random() * 3;
+                        break;
+                    case 'WIND':
+                    case 'ICY_WIND':
+                        this.x = Math.random() * width; this.y = Math.random() * height;
+                        this.vx = 10 + Math.random() * 10; this.size = 1 + Math.random();
+                        break;
+                    case 'SANDSTORM':
+                        this.x = Math.random() * width; this.y = Math.random() * height;
+                        this.vx = 15 + Math.random() * 5; this.vy = (Math.random() - 0.5) * 2; this.size = 2;
+                        break;
+                    case 'METEOR':
+                        this.x = Math.random() * width * 1.5; this.y = Math.random() * -height;
+                        this.len = 100 + Math.random() * 100; this.speed = 15 + Math.random() * 10;
+                        this.size = 1 + Math.random(); this.delay = Math.random() * 200;
+                        break;
+                    case 'FIREFLIES':
+                        this.x = Math.random() * width; this.y = Math.random() * height;
+                        this.vx = (Math.random() - 0.5) * 2; this.vy = (Math.random() - 0.5) * 2;
+                        this.size = 2 + Math.random() * 2; this.alpha = Math.random();
+                        break;
+                    case 'LEAVES':
+                    case 'SAKURA':
+                        this.x = Math.random() * width; this.y = Math.random() * -height;
+                        this.vy = 2 + Math.random() * 2; this.vx = 1 + Math.random();
+                        this.rot = Math.random() * 360; this.rotSpeed = (Math.random() - 0.5) * 5;
+                        this.size = 5 + Math.random() * 5;
+                        break;
+                    case 'FOG':
+                        this.x = Math.random() * width; this.y = Math.random() * height;
+                        this.vx = 0.5 + Math.random(); this.size = 50 + Math.random() * 100; this.alpha = 0.05 + Math.random() * 0.05;
+                        break;
+                    case 'EMBER':
+                        this.x = Math.random() * width; this.y = height + Math.random() * 50;
+                        this.vy = -1 - Math.random() * 2; this.size = 2 + Math.random(); this.alpha = 1;
+                        break;
+                    case 'BUBBLES':
+                        this.x = Math.random() * width; this.y = height + Math.random() * 50;
+                        this.vy = -2 - Math.random(); this.size = 3 + Math.random() * 5; this.alpha = 0.5;
+                        break;
+                    case 'STARS_FALLING':
+                        this.x = Math.random() * width; this.y = Math.random() * -height;
+                        this.vy = 3 + Math.random() * 2; this.size = 2;
+                        break;
+                    case 'POLLEN':
+                    case 'GOLDEN_DUST':
+                        this.x = Math.random() * width; this.y = Math.random() * height;
+                        this.vx = (Math.random() - 0.5); this.vy = (Math.random() - 0.5);
+                        this.size = 1 + Math.random(); this.alpha = Math.random();
+                        break;
+                    case 'GALAXY':
+                        this.x = Math.random() * width; this.y = Math.random() * height;
+                        this.size = Math.random() * 2; this.alpha = Math.random();
+                        this.color = `hsl(${Math.random() * 360}, 70%, 70%)`;
+                        break;
+                }
+            }
+
+            update() {
+                switch (this.type) {
+                    case 'CLEAR': case 'GALAXY':
+                        this.alpha += this.blinkSpeed || 0.01;
+                        if (this.alpha > 1 || this.alpha < 0) (this.blinkSpeed) ? this.blinkSpeed *= -1 : this.blinkSpeed = -0.01;
+                        break;
+                    case 'LIGHT_RAIN': case 'HEAVY_RAIN': case 'STORM': case 'RAINBOW_RAIN': case 'STARS_FALLING':
+                        this.y += this.vy; if (this.y > height) this.y = -this.len || -5;
+                        break;
+                    case 'SNOW': case 'LEAVES': case 'SAKURA':
+                        this.y += this.vy; this.x += this.vx + Math.sin(this.y * 0.02); this.rot += this.rotSpeed;
+                        if (this.y > height) this.y = -10; if (this.x > width) this.x = 0;
+                        break;
+                    case 'WIND': case 'ICY_WIND': case 'SANDSTORM': case 'FOG':
+                        this.x += this.vx; this.y += (Math.random() - 0.5);
+                        if (this.x > width + (this.size || 0)) this.x = -(this.size || 0);
+                        break;
+                    case 'METEOR':
+                        if (this.delay > 0) { this.delay--; return; }
+                        this.x -= this.speed; this.y += this.speed;
+                        if (this.y > height + 200 || this.x < -200) { this.reset(); this.delay = Math.random() * 300 + 100; }
+                        break;
+                    case 'FIREFLIES': case 'POLLEN': case 'GOLDEN_DUST':
+                        this.x += this.vx; this.y += this.vy;
+                        if (this.x < 0 || this.x > width) this.vx *= -1; if (this.y < 0 || this.y > height) this.vy *= -1;
+                        this.alpha += (Math.random() - 0.5) * 0.05; if (this.alpha < 0) this.alpha = 0; if (this.alpha > 1) this.alpha = 1;
+                        break;
+                    case 'EMBER': case 'BUBBLES':
+                        this.y += this.vy; this.alpha -= 0.005;
+                        if (this.y < -10 || this.alpha <= 0) this.reset();
+                        break;
+                }
+            }
+
+            draw() {
+                if (this.type === 'METEOR' && this.delay > 0) return;
+                ctx.beginPath();
+                if (['LIGHT_RAIN', 'HEAVY_RAIN', 'STORM', 'WIND', 'METEOR', 'ICY_WIND', 'RAINBOW_RAIN'].includes(this.type)) {
+                    // Line drawing
+                    let col = 'rgba(174, 194, 224, 0.5)';
+                    if (this.type === 'HEAVY_RAIN' || this.type === 'STORM') col = 'rgba(174, 194, 224, 0.8)';
+                    if (this.type === 'WIND') col = 'rgba(255, 255, 255, 0.3)';
+                    if (this.type === 'ICY_WIND') col = 'rgba(200, 240, 255, 0.4)';
+                    if (this.type === 'RAINBOW_RAIN') col = this.color;
+
+                    if (this.type === 'METEOR') {
+                        const tailX = this.x + this.len; const tailY = this.y - this.len;
+                        const grad = ctx.createLinearGradient(this.x, this.y, tailX, tailY);
+                        grad.addColorStop(0, 'white'); grad.addColorStop(1, 'transparent');
+                        ctx.strokeStyle = grad;
+                    } else {
+                        ctx.strokeStyle = col;
+                    }
+                    ctx.lineWidth = (this.type === 'HEAVY_RAIN' || this.type === 'STORM' || this.type === 'METEOR') ? 2 : 1;
+                    ctx.moveTo(this.x, this.y);
+                    if (this.type === 'WIND' || this.type === 'ICY_WIND') ctx.lineTo(this.x + 20, this.y);
+                    else if (this.type === 'METEOR') ctx.lineTo(this.x + this.len, this.y - this.len);
+                    else ctx.lineTo(this.x - (this.type.includes('RAIN') ? 2 : 0), this.y + (this.len || 10));
+                    ctx.stroke();
+                } else {
+                    // Shape drawing
+                    let col = `rgba(255, 255, 255, ${this.alpha !== undefined ? this.alpha : 0.8})`;
+                    if (this.type === 'FIREFLIES') col = `rgba(255, 215, 0, ${this.alpha})`;
+                    if (this.type === 'FOG') col = `rgba(200, 200, 200, ${this.alpha})`;
+                    if (this.type === 'EMBER') col = `rgba(255, 69, 0, ${this.alpha})`;
+                    if (this.type === 'BUBBLES') col = `rgba(135, 206, 235, ${this.alpha})`;
+                    if (this.type === 'LEAVES') col = 'rgba(217, 119, 6, 0.8)';
+                    if (this.type === 'SAKURA') col = 'rgba(255, 183, 197, 0.9)';
+                    if (this.type === 'SANDSTORM') col = 'rgba(194, 178, 128, 0.6)';
+                    if (this.type === 'POLLEN') col = `rgba(255, 255, 224, ${this.alpha})`;
+                    if (this.type === 'GOLDEN_DUST') col = `rgba(255, 215, 0, ${this.alpha})`;
+                    if (this.type === 'GALAXY') col = this.color;
+
+                    ctx.fillStyle = col;
+                    if (this.type === 'LEAVES' || this.type === 'SAKURA') {
+                        ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.rot * Math.PI / 180);
+                        ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size); ctx.restore();
+                    } else if (this.type === 'STARS_FALLING') {
+                        // Draw simple star
+                        ctx.fillText('★', this.x, this.y);
+                    } else {
+                        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+                    }
+                }
+            }
+        }
+
+        function setWeather(type) {
+            currentWeather = type;
+            particles = [];
+            let count = 100;
+            weatherInfo.innerText = "Thời tiết: " + type.replace(/_/g, ' ');
+
+            if (type === 'CLEAR') count = 150;
+            if (type.includes('RAIN')) count = 400;
+            if (type === 'STORM' || type === 'SANDSTORM') count = 800;
+            if (type === 'SNOW' || type === 'EMBER') count = 200;
+            if (type === 'WIND' || type === 'ICY_WIND') count = 150;
+            if (type === 'METEOR') count = 5;
+            if (type === 'FIREFLIES' || type === 'BUBBLES') count = 50;
+            if (type === 'LEAVES' || type === 'SAKURA' || type === 'STARS_FALLING') count = 40;
+            if (type === 'FOG') count = 20;
+            if (type === 'POLLEN' || type === 'GOLDEN_DUST' || type === 'GALAXY') count = 300;
+
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle(type));
+                if (type !== 'METEOR' && type !== 'EMBER' && type !== 'BUBBLES') particles[i].y = Math.random() * height;
+            }
+        }
+
+        function updateWeather() {
+            timeSinceLastSwitch++;
+            if (timeSinceLastSwitch > SWITCH_INTERVAL) {
+                const nextWeather = WEATHER_TYPES[Math.floor(Math.random() * WEATHER_TYPES.length)];
+                setWeather(nextWeather);
+                timeSinceLastSwitch = 0;
+            }
+            if (currentWeather === 'STORM') {
+                if (Math.random() < 0.005) {
+                    flashOverlay.style.opacity = 0.6;
+                    setTimeout(() => flashOverlay.style.opacity = 0, 100);
+                }
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            updateWeather();
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+
+        window.onload = function () {
+            // Random start weather
+            const startWeather = WEATHER_TYPES[Math.floor(Math.random() * WEATHER_TYPES.length)];
+            setWeather(startWeather);
+            animate();
+        };
+    </script>
+</body>
+
+</html>

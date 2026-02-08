@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Index - Mều Vô Tri</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #020617;
+            color: #f8fafc;
+            overflow-x: hidden;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Canvas nền cho Hiệu Ứng Thời Tiết */
+        #weatherCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Hiệu ứng chớp */
+        #flashOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 1;
+            transition: opacity 0.1s;
+        }
+
+        /* Container chính với hiệu ứng kính mờ */
+        .glass-container {
+            position: relative;
+            z-index: 10;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 80px rgba(0, 0, 0, 0.5);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 1200px;
+            margin: 20px auto;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .glass-container::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background: radial-gradient(circle at top, rgba(249, 115, 22, 0.05), transparent 70%);
+            pointer-events: none;
+        }
+
+        /* Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-up {
+            animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            opacity: 0;
+        }
+
+        .delay-1 {
+            animation-delay: 0.1s;
+        }
+
+        .delay-2 {
+            animation-delay: 0.2s;
+        }
+
+        .delay-3 {
+            animation-delay: 0.3s;
+        }
+
+        /* Game Card Styling */
+        .game-card {
+            position: relative;
+            background: #1e293b;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s ease;
+            text-decoration: none;
+            display: block;
+            /* Đảm bảo thẻ a hoạt động như block */
+        }
+
+        .game-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.4), 0 0 20px rgba(249, 115, 22, 0.2);
+            border-color: rgba(249, 115, 22, 0.5);
+        }
+
+        .card-img-wrapper {
+            height: 180px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+        }
+
+        .game-card:hover .card-img {
+            transform: scale(1.1);
+        }
+
+        /* Overlay nút bấm */
+        .card-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(2px);
+        }
+
+        .game-card:hover .card-overlay {
+            opacity: 1;
+        }
+
+        .btn-action {
+            background: #f97316;
+            color: white;
+            padding: 8px 24px;
+            border-radius: 99px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transform: translateY(10px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
+        }
+
+        .game-card:hover .btn-action {
+            transform: translateY(0);
+        }
+
+        /* Text Content */
+        .card-content {
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            background: linear-gradient(to bottom, #1e293b, #0f172a);
+        }
+
+        .game-name {
+            font-size: 1.1rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #f1f5f9;
+            margin-bottom: 8px;
+            transition: color 0.3s;
+        }
+
+        .game-card:hover .game-name {
+            color: #fbbf24;
+        }
+
+        .game-desc {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+
+        /* Avatar Glow */
+        .avatar-glow {
+            box-shadow: 0 0 25px rgba(249, 115, 22, 0.4);
+            animation: pulse-avatar 3s infinite;
+        }
+
+        @keyframes pulse-avatar {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 40px rgba(249, 115, 22, 0.6);
+            }
+        }
+
+        /* Coming Soon Card */
+        .coming-soon {
+            filter: grayscale(100%);
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .coming-soon:hover {
+            transform: none;
+            box-shadow: none;
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+
+<body class="p-2 md:p-6 bg-[#020617]">
+
+    <canvas id="weatherCanvas"></canvas>
+    <div id="flashOverlay"></div>
+
+    <div class="glass-container animate-up">
+
+        <!-- Header Section -->
+        <div class="pt-12 pb-8 px-6 text-center border-b border-white/5 relative">
+
+            <!-- Avatar Shop -->
+            <div class="mx-auto w-32 h-32 mb-6 relative group cursor-pointer animate-up delay-1">
+                <div
+                    class="absolute -inset-1 bg-gradient-to-br from-orange-500 to-red-600 rounded-full blur opacity-40 group-hover:opacity-70 transition duration-500">
+                </div>
+                <img src="Image/avt-chinh.png" alt="Mều Vô Tri"
+                    class="relative w-full h-full object-cover rounded-full border-2 border-orange-400/50 avatar-glow">
+            </div>
+
+            <h1 class="text-2xl md:text-4xl font-black text-white uppercase tracking-tight mb-2 animate-up delay-2">
+                Dịch Vụ Cày Thuê Mều Zô Tri
+            </h1>
+            <div
+                class="inline-block px-4 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 animate-up delay-2">
+                <p class="text-xs md:text-sm font-bold text-orange-400 tracking-[0.2em] uppercase">
+                    AN TOÀN • UY TÍN • CHẤT LƯỢNG
+                </p>
+            </div>
+        </div>
+
+        <!-- Main Content: Game Grid -->
+        <div class="flex-grow p-6 md:p-12 bg-gradient-to-b from-transparent to-[#020617]/50">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="text-white/60 text-sm font-bold uppercase mb-6 flex items-center gap-3 animate-up delay-3">
+                    <span class="w-8 h-[1px] bg-orange-500"></span> Danh Sách Dịch Vụ Cày Thuê
+                </h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-up delay-3">
+
+                    <!-- GAME 1: AFSE (Link chính) -->
+                    <!-- Bấm vào đây sẽ chuyển hướng cùng tab, cho phép dùng nút Back để quay lại -->
+                    <a href="afse.html" class="game-card">
+                        <div class="card-img-wrapper">
+                            <!-- Sử dụng hình afse.png như yêu cầu -->
+                            <img src="Image/afse.png" alt="Anime Fighting Simulator Endless" class="card-img"
+                                onerror="this.src='https://via.placeholder.com/400x200?text=AFSE'">
+                            <!-- Fallback nếu ảnh lỗi -->
+                            <div class="card-overlay">
+                                <span class="btn-action">Xem Chi Tiết <i class="fas fa-arrow-right ml-2"></i></span>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <h3 class="game-name">Anime Fighting Simulator Endless</h3>
+                            <p class="game-desc">Cày thuê Battlepass, săn Champion, Farm Token, Treo máy giá rẻ ,Nâng
+                                cấp power ,....</p>
+                        </div>
+                    </a>
+
+                    <!-- GAME 2: Placeholder (Sắp ra mắt) -->
+                    <div class="game-card coming-soon">
+                        <div class="card-img-wrapper">
+                            <img src="https://via.placeholder.com/400x200/0f172a/94a3b8?text=COMING+SOON"
+                                alt="Coming Soon" class="card-img">
+                        </div>
+                        <div class="card-content">
+                            <h3 class="game-name text-slate-500">Solo Hunter</h3>
+                            <p class="game-desc">Dịch vụ đang được cập nhật. Vui lòng quay lại sau.</p>
+                        </div>
+                    </div>
+
+                    <!-- GAME 3: Placeholder (Sắp ra mắt) -->
+                    <div class="game-card coming-soon">
+                        <div class="card-img-wrapper">
+                            <img src="https://via.placeholder.com/400x200/0f172a/94a3b8?text=COMING+SOON"
+                                alt="Coming Soon" class="card-img">
+                        </div>
+                        <div class="card-content">
+                            <h3 class="game-name text-slate-500">Anime Vanguard</h3>
+                            <p class="game-desc">Dịch vụ đang được cập nhật. Vui lòng quay lại sau.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="border-t border-white/5 bg-[#0f172a]/80 p-6 md:p-8">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
+
+                <!-- Social Left -->
+                <div class="flex items-center gap-4 group">
+                    <a href="https://m.me/MeoPlayTogether.22.05.2006" target="_blank"
+                        class="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 transition-transform group-hover:scale-110">
+                        <i class="fab fa-facebook-messenger text-xl"></i>
+                    </a>
+                    <div>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Hỗ trợ tư vấn 24/7</p>
+                        <p class="text-white font-bold uppercase">Mọi thắc mắc liên hệ FB: MỀU VÔ TRI</p>
+                    </div>
+                </div>
+
+                <!-- Copyright / Middle -->
+                <div class="text-xs text-slate-500">
+                    &copy; Bản quyền thuộc Mèo Vô Tri ,2026
+                </div>
+
+                <!-- Social Right -->
+                <div class="flex items-center gap-4 flex-row-reverse group">
+                    <a href="https://discord.com/users/1123886807717789737" target="_blank"
+                        class="w-12 h-12 rounded-full bg-[#5865F2] flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 transition-transform group-hover:scale-110">
+                        <i class="fab fa-discord text-xl"></i>
+                    </a>
+                    <div class="text-right">
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Tham gia Discord check
+                            uy tín , giao lưu </p>
+                        <p class="text-white font-bold uppercase">Động cày thuê của Mèo</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Script Thời Tiết (Giữ nguyên logic random 20 loại thời tiết) -->
+    <script>
+        const canvas = document.getElementById('weatherCanvas');
+        const ctx = canvas.getContext('2d');
+        const flashOverlay = document.getElementById('flashOverlay');
+        let width, height;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        const WEATHER_TYPES = [
+            'CLEAR', 'LIGHT_RAIN', 'HEAVY_RAIN', 'STORM', 'SNOW',
+            'WIND', 'METEOR', 'FIREFLIES', 'LEAVES', 'FOG',
+            'SAKURA', 'EMBER', 'BUBBLES', 'STARS_FALLING', 'SANDSTORM',
+            'POLLEN', 'RAINBOW_RAIN', 'GALAXY', 'ICY_WIND', 'GOLDEN_DUST'
+        ];
+
+        let currentWeather = '';
+        let particles = [];
+        let timeSinceLastSwitch = 0;
+        const SWITCH_INTERVAL = 1500; // 25s
+
+        class Particle {
+            constructor(type) { this.type = type; this.reset(); }
+            reset() {
+                switch (this.type) {
+                    case 'CLEAR':
+                        this.x = Math.random() * width; this.y = Math.random() * height;
+                        this.size = Math.random() * 2; this.alpha = Math.random(); this.blinkSpeed = 0.01 + Math.random() * 0.03; break;
+                    case 'LIGHT_RAIN': case 'RAINBOW_RAIN':
+                        this.x = Math.random() * width; this.y = Math.random() * -height;
+                        this.vy = 5 + Math.random() * 5; this.len = 10 + Math.random() * 10;
+                        if (this.type === 'RAINBOW_RAIN') this.color = `hsl(${Math.random() * 360}, 100%, 50%)`; break;
+                    case 'HEAVY_RAIN': case 'STORM':
+                        this.x = Math.random() * width; this.y = Math.random() * -height;
+                        this.vy = 15 + Math.random() * 10; this.len = 20 + Math.random() * 20; break;
+                    case 'SNOW':
+                        this.x = Math.random() * width; this.y = Math.random() * -height;
+                        this.vy = 1 + Math.random() * 2; this.vx = (Math.random() - 0.5) * 2; this.size = 2 + Math.random() * 3; break;
+                    case 'WIND': case 'ICY_WIND':
+                        this.x = Math.random() * width; this.y = Math.random() * height;
+                        this.vx = 10 + Math.random() * 10; this.size = 1 + Math.random(); break;
+                    case 'SANDSTORM':
+                        this.x = Math.random() * width; this.y = Math.random() * height;
+                        this.vx = 15 + Math.random() * 5; this.vy = (Math.random() - 0.5) * 2; this.size = 2; break;
+                    case 'METEOR':
+                        this.x = Math.random() * width * 1.5; this.y = Math.random() * -height;
+                        this.len = 100 + Math.random() * 100; this.speed = 15 + Math.random() * 10;
+                        this.size = 1 + Math.random(); this.delay = Math.random() * 200; break;
+                    case 'FIREFLIES':
+                        this.x = Math.random() * width; this.y = Math.random() * height;
+                        this.vx = (Math.random() - 0.5) * 2; this.vy = (Math.random() - 0.5) * 2;
+                        this.size = 2 + Math.random() * 2; this.alpha = Math.random(); break;
+                    case 'LEAVES': case 'SAKURA':
+                        this.x = Math.random() * width; this.y = Math.random() * -height;
+                        this.vy = 2 + Math.random() * 2; this.vx = 1 + Math.random();
+                        this.rot = Math.random() * 360; this.rotSpeed = (Math.random() - 0.5) * 5;
+                        this.size = 5 + Math.random() * 5; break;
+                    case 'FOG':
+                        this.x = Math.random() * width; this.y = Math.random() * height;
+                        this.vx = 0.5 + Math.random(); this.size = 50 + Math.random() * 100; this.alpha = 0.05 + Math.random() * 0.05; break;
+                    case 'EMBER':
+                        this.x = Math.random() * width; this.y = height + Math.random() * 50;
+                        this.vy = -1 - Math.random() * 2; this.size = 2 + Math.random(); this.alpha = 1; break;
+                    case 'BUBBLES':
+                        this.x = Math.random() * width; this.y = height + Math.random() * 50;
+                        this.vy = -2 - Math.random(); this.size = 3 + Math.random() * 5; this.alpha = 0.5; break;
+                    case 'STARS_FALLING':
+                        this.x = Math.random() * width; this.y = Math.random() * -height;
+                        this.vy = 3 + Math.random() * 2; this.size = 2; break;
+                    case 'POLLEN': case 'GOLDEN_DUST':
+                        this.x = Math.random() * width; this.y = Math.random() * height;
+                        this.vx = (Math.random() - 0.5); this.vy = (Math.random() - 0.5);
+                        this.size = 1 + Math.random(); this.alpha = Math.random(); break;
+                    case 'GALAXY':
+                        this.x = Math.random() * width; this.y = Math.random() * height;
+                        this.size = Math.random() * 2; this.alpha = Math.random();
+                        this.color = `hsl(${Math.random() * 360}, 70%, 70%)`; break;
+                }
+            }
+
+            update() {
+                switch (this.type) {
+                    case 'CLEAR': case 'GALAXY':
+                        this.alpha += this.blinkSpeed || 0.01;
+                        if (this.alpha > 1 || this.alpha < 0) (this.blinkSpeed) ? this.blinkSpeed *= -1 : this.blinkSpeed = -0.01; break;
+                    case 'LIGHT_RAIN': case 'HEAVY_RAIN': case 'STORM': case 'RAINBOW_RAIN': case 'STARS_FALLING':
+                        this.y += this.vy; if (this.y > height) this.y = -this.len || -5; break;
+                    case 'SNOW': case 'LEAVES': case 'SAKURA':
+                        this.y += this.vy; this.x += this.vx + Math.sin(this.y * 0.02); this.rot += this.rotSpeed;
+                        if (this.y > height) this.y = -10; if (this.x > width) this.x = 0; break;
+                    case 'WIND': case 'ICY_WIND': case 'SANDSTORM': case 'FOG':
+                        this.x += this.vx; this.y += (Math.random() - 0.5);
+                        if (this.x > width + (this.size || 0)) this.x = -(this.size || 0); break;
+                    case 'METEOR':
+                        if (this.delay > 0) { this.delay--; return; }
+                        this.x -= this.speed; this.y += this.speed;
+                        if (this.y > height + 200 || this.x < -200) { this.reset(); this.delay = Math.random() * 300 + 100; } break;
+                    case 'FIREFLIES': case 'POLLEN': case 'GOLDEN_DUST':
+                        this.x += this.vx; this.y += this.vy;
+                        if (this.x < 0 || this.x > width) this.vx *= -1; if (this.y < 0 || this.y > height) this.vy *= -1;
+                        this.alpha += (Math.random() - 0.5) * 0.05; if (this.alpha < 0) this.alpha = 0; if (this.alpha > 1) this.alpha = 1; break;
+                    case 'EMBER': case 'BUBBLES':
+                        this.y += this.vy; this.alpha -= 0.005;
+                        if (this.y < -10 || this.alpha <= 0) this.reset(); break;
+                }
+            }
+
+            draw() {
+                if (this.type === 'METEOR' && this.delay > 0) return;
+                ctx.beginPath();
+                if (['LIGHT_RAIN', 'HEAVY_RAIN', 'STORM', 'WIND', 'METEOR', 'ICY_WIND', 'RAINBOW_RAIN'].includes(this.type)) {
+                    let col = 'rgba(174, 194, 224, 0.5)';
+                    if (this.type === 'HEAVY_RAIN' || this.type === 'STORM') col = 'rgba(174, 194, 224, 0.8)';
+                    if (this.type === 'WIND') col = 'rgba(255, 255, 255, 0.3)';
+                    if (this.type === 'ICY_WIND') col = 'rgba(200, 240, 255, 0.4)';
+                    if (this.type === 'RAINBOW_RAIN') col = this.color;
+
+                    if (this.type === 'METEOR') {
+                        const tailX = this.x + this.len; const tailY = this.y - this.len;
+                        const grad = ctx.createLinearGradient(this.x, this.y, tailX, tailY);
+                        grad.addColorStop(0, 'white'); grad.addColorStop(1, 'transparent');
+                        ctx.strokeStyle = grad;
+                    } else { ctx.strokeStyle = col; }
+                    ctx.lineWidth = (this.type === 'HEAVY_RAIN' || this.type === 'STORM' || this.type === 'METEOR') ? 2 : 1;
+                    ctx.moveTo(this.x, this.y);
+                    if (this.type === 'WIND' || this.type === 'ICY_WIND') ctx.lineTo(this.x + 20, this.y);
+                    else if (this.type === 'METEOR') ctx.lineTo(this.x + this.len, this.y - this.len);
+                    else ctx.lineTo(this.x - (this.type.includes('RAIN') ? 2 : 0), this.y + (this.len || 10));
+                    ctx.stroke();
+                } else {
+                    let col = `rgba(255, 255, 255, ${this.alpha !== undefined ? this.alpha : 0.8})`;
+                    if (this.type === 'FIREFLIES') col = `rgba(255, 215, 0, ${this.alpha})`;
+                    if (this.type === 'FOG') col = `rgba(200, 200, 200, ${this.alpha})`;
+                    if (this.type === 'EMBER') col = `rgba(255, 69, 0, ${this.alpha})`;
+                    if (this.type === 'BUBBLES') col = `rgba(135, 206, 235, ${this.alpha})`;
+                    if (this.type === 'LEAVES') col = 'rgba(217, 119, 6, 0.8)';
+                    if (this.type === 'SAKURA') col = 'rgba(255, 183, 197, 0.9)';
+                    if (this.type === 'SANDSTORM') col = 'rgba(194, 178, 128, 0.6)';
+                    if (this.type === 'POLLEN') col = `rgba(255, 255, 224, ${this.alpha})`;
+                    if (this.type === 'GOLDEN_DUST') col = `rgba(255, 215, 0, ${this.alpha})`;
+                    if (this.type === 'GALAXY') col = this.color;
+
+                    ctx.fillStyle = col;
+                    if (this.type === 'LEAVES' || this.type === 'SAKURA') {
+                        ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.rot * Math.PI / 180);
+                        ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size); ctx.restore();
+                    } else if (this.type === 'STARS_FALLING') {
+                        ctx.fillText('★', this.x, this.y);
+                    } else {
+                        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+                    }
+                }
+            }
+        }
+
+        function setWeather(type) {
+            currentWeather = type; particles = [];
+            let count = 100;
+            if (type === 'CLEAR') count = 150;
+            if (type.includes('RAIN')) count = 400;
+            if (type === 'STORM' || type === 'SANDSTORM') count = 800;
+            if (type === 'SNOW' || type === 'EMBER') count = 200;
+            if (type === 'WIND' || type === 'ICY_WIND') count = 150;
+            if (type === 'METEOR') count = 5;
+            if (type === 'FIREFLIES' || type === 'BUBBLES') count = 50;
+            if (type === 'LEAVES' || type === 'SAKURA' || type === 'STARS_FALLING') count = 40;
+            if (type === 'FOG') count = 20;
+            if (type === 'POLLEN' || type === 'GOLDEN_DUST' || type === 'GALAXY') count = 300;
+
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle(type));
+                if (type !== 'METEOR' && type !== 'EMBER' && type !== 'BUBBLES') particles[i].y = Math.random() * height;
+            }
+        }
+
+        function updateWeather() {
+            timeSinceLastSwitch++;
+            if (timeSinceLastSwitch > SWITCH_INTERVAL) {
+                const nextWeather = WEATHER_TYPES[Math.floor(Math.random() * WEATHER_TYPES.length)];
+                setWeather(nextWeather);
+                timeSinceLastSwitch = 0;
+            }
+            if (currentWeather === 'STORM') {
+                if (Math.random() < 0.005) {
+                    flashOverlay.style.opacity = 0.6;
+                    setTimeout(() => flashOverlay.style.opacity = 0, 100);
+                }
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            updateWeather();
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+
+        window.onload = function () {
+            const startWeather = WEATHER_TYPES[Math.floor(Math.random() * WEATHER_TYPES.length)];
+            setWeather(startWeather);
+            animate();
+        };
+    </script>
+</body>
+
+</html>
